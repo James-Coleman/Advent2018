@@ -157,6 +157,12 @@ extension Array where Element: Step {
         return sortedAvailableSteps.first
     }
     
+    var allAvailableSteps: [Step] {
+        let availableSteps = self.filter { $0.allRequirementsCompleteSelfIncomplete }
+        let sortedAvailableSteps = availableSteps.sorted { $0.id < $1.id }
+        return sortedAvailableSteps
+    }
+    
     var correctOrder: String {
         let stepArray = self
         
@@ -199,8 +205,8 @@ func example() {
     
 }
 
-func part1() {
-    let part1Input = """
+
+let part1Input = """
 Step P must be finished before step G can begin.
 Step X must be finished before step V can begin.
 Step H must be finished before step R can begin.
@@ -303,6 +309,8 @@ Step C must be finished before step Y can begin.
 Step T must be finished before step V can begin.
 Step W must be finished before step M can begin.
 """
+
+func part1() {
     
     do {
         let steps = try stepsFrom(input: part1Input)
@@ -312,4 +320,6 @@ Step W must be finished before step M can begin.
     }
 }
 
-part1()
+let letterTime: [String: Int] = ["A":1, "B":2, "C":3, "D":4, "E":5, "F":6. "G":7, "H":8, "I":9, "J":10, "K":11, "L":12, "M":13, "N":14, "O":15, "P":16, "Q":17, "R":18, "S":19, "T":20, "U":21, "V":22, "W":23, "X":24, "Y":25, "Z":26]
+
+//part1()
