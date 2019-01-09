@@ -23,6 +23,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C68EFF8621E5CAF2002724D8 /* Advent of Code 2018.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = "Advent of Code 2018.playground"; sourceTree = "<group>"; };
+		C68EFF8721E5CB38002724D8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C6981FE221C8D12200A55E87 /* Advent of Code 2018 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Advent of Code 2018"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6981FE521C8D12200A55E87 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -41,6 +43,8 @@
 		C6981FD921C8D12200A55E87 = {
 			isa = PBXGroup;
 			children = (
+				C68EFF8721E5CB38002724D8 /* README.md */,
+				C68EFF8621E5CAF2002724D8 /* Advent of Code 2018.playground */,
 				C6981FE421C8D12200A55E87 /* Advent of Code 2018 */,
 				C6981FE321C8D12200A55E87 /* Products */,
 			);
