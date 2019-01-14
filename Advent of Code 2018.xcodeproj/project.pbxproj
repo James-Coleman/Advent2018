@@ -248,9 +248,10 @@
 		C6981FEA21C8D12200A55E87 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = T3V57DT83Y;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = WZ45Y3HQY8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
@@ -258,9 +259,10 @@
 		C6981FEB21C8D12200A55E87 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = T3V57DT83Y;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = WZ45Y3HQY8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.2;
 			};
 			name = Release;

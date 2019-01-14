@@ -1,16 +1,47 @@
 import Foundation
 
-class Step {
+let letterTime: [String: Int] = ["A":1, "B":2, "C":3, "D":4, "E":5, "F":6, "G":7, "H":8, "I":9, "J":10, "K":11, "L":12, "M":13, "N":14, "O":15, "P":16, "Q":17, "R":18, "S":19, "T":20, "U":21, "V":22, "W":23, "X":24, "Y":25, "Z":26]
+
+final class Step {
     let id: String
     var complete: Bool
     var requirements: Set<Step>
+    var timeTaken: Int = 0
+    weak var worker: Worker? = nil
     
-    var allRequirementsComplete: Bool {
+    enum StepTimeError: Swift.Error {
+        case letterTimeDoesNotExist(letter: String)
+    }
+    
+    public func timeRemaining(example: Bool = false) throws -> Int {
+        guard let letterTime = letterTime[id] else { throw StepTimeError.letterTimeDoesNotExist(letter: id) }
+        return example ? (letterTime - timeTaken) : ((letterTime + 60) - timeTaken)
+    }
+    
+    public func timeComplete(example: Bool = false) throws -> Bool {
+        let timeRemaining = try self.timeRemaining(example: example)
+        return timeRemaining == 0
+    }
+    
+    public func allRequirementsTimeCompleteSelfTimeIncomplete(example: Bool = false) throws -> Bool {
+        let timeWaiting = try requirements.filter { try $0.timeComplete(example: example) == false }
+        let selfComplete = try self.timeComplete(example: example)
+        return timeWaiting.isEmpty && selfComplete == false
+    }
+    
+    public func requirementsCompleteSelfTimeIncompleteNilWorker(example: Bool = false) throws -> Bool {
+        let timeWaiting = try requirements.filter { try $0.timeComplete(example: example) == false }
+        let selfComplete = try self.timeComplete(example: example)
+        let workerIsNil = worker == nil
+        return timeWaiting.isEmpty && selfComplete && workerIsNil
+    }
+    
+    public var allRequirementsComplete: Bool {
         let incomplete = requirements.filter { $0.complete == false }
         return incomplete.isEmpty
     }
     
-    var allRequirementsAndSelfComplete: Bool {
+    public var allRequirementsAndSelfComplete: Bool {
         if complete {
             return true
         }
@@ -18,7 +49,7 @@ class Step {
         return incomplete.isEmpty
     }
     
-    var allRequirementsCompleteSelfIncomplete: Bool {
+    public var allRequirementsCompleteSelfIncomplete: Bool {
         let incomplete = requirements.filter { $0.complete == false }
         return incomplete.isEmpty && self.complete == false
     }
@@ -27,6 +58,28 @@ class Step {
         self.id = id
         self.complete = false
         self.requirements = []
+    }
+}
+
+final class Worker {
+    private (set) var stepInProgress: Step? = nil
+    
+    public func assign(step: Step) {
+        step.worker = self
+        stepInProgress = step
+    }
+    
+    public func incrementStepTime(example: Bool = false) throws -> String? {
+        stepInProgress?.timeTaken += 1
+        
+        if let timeRemaining = try stepInProgress?.timeRemaining(example: example), timeRemaining == 0 {
+            let id = stepInProgress?.id
+            stepInProgress?.worker = nil
+            stepInProgress = nil
+            return id
+        }
+        
+        return nil
     }
 }
 
@@ -42,10 +95,20 @@ extension Step: Hashable {
     }
 }
 
+/*
+extension Worker: CustomStringConvertible {
+    var description: String {
+        return """
+        Worker(stepInProgress: \(stepInProgress)
+        """
+    }
+}
+*/
+
 extension Step: CustomStringConvertible {
     var description: String {
         return """
-        Step(id: \(id), complete: \(complete), requirements: \(requirements)
+        Step(id: \(id), complete: \(complete), requirements: \(requirements), timeTaken: \(timeTaken), timeRemaining: \(try? timeRemaining()) (cannot pass through example, this will include 60 seconds), worker: \(worker)
         """
     }
 }
@@ -147,19 +210,26 @@ extension Array where Element: Step {
         return noRequirements.first
     }
     
+    /// A helper that returns the Steps sorted alphabetically by ID
+    var sortedAlphabetically: [Step] {
+        return self.sorted { $0.id < $1.id }
+    }
+    
     var allStepsCompleted: Bool {
         return self.filter { $0.complete == false }.count == 0
     }
     
     var nextAvailableStep: Step? {
         let availableSteps = self.filter { $0.allRequirementsCompleteSelfIncomplete }
-        let sortedAvailableSteps = availableSteps.sorted { $0.id < $1.id }
+//        let sortedAvailableSteps = availableSteps.sorted { $0.id < $1.id }
+        let sortedAvailableSteps = availableSteps.sortedAlphabetically
         return sortedAvailableSteps.first
     }
     
     var allAvailableSteps: [Step] {
         let availableSteps = self.filter { $0.allRequirementsCompleteSelfIncomplete }
-        let sortedAvailableSteps = availableSteps.sorted { $0.id < $1.id }
+//        let sortedAvailableSteps = availableSteps.sorted { $0.id < $1.id }
+        let sortedAvailableSteps = availableSteps.sortedAlphabetically
         return sortedAvailableSteps
     }
     
@@ -174,6 +244,25 @@ extension Array where Element: Step {
         }
         
         return stringToReturn
+    }
+    
+    func allReadySteps(example: Bool = false) throws -> [Step] {
+        let availableSteps = try self.filter { try $0.allRequirementsTimeCompleteSelfTimeIncomplete(example: example) }
+        let sortedAvailableSteps = availableSteps.sortedAlphabetically
+        return sortedAvailableSteps
+    }
+    
+    var unassigned: [Step] {
+        return self.filter { $0.worker == nil }
+    }
+}
+
+extension Collection {
+    
+    /// Returns the element at the specified index if it is within bounds, otherwise nil.
+    /// From (StackOverflow)[https://stackoverflow.com/questions/25329186/safe-bounds-checked-array-lookup-in-swift-through-optional-bindings/25330930#25330930]
+    subscript (safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }
 
@@ -197,7 +286,7 @@ func example() {
         steps.count
         //    print(steps)
         //    print(steps.firstStepWithNoRequirements)
-        print(steps.nextAvailableStep)
+//        print(steps.nextAvailableStep)
         print(correctOrder(from: steps)) // Prints "CABDFE" (correct)
     } catch {
         print(error)
@@ -205,8 +294,9 @@ func example() {
     
 }
 
+//example()
 
-let part1Input = """
+let input = """
 Step P must be finished before step G can begin.
 Step X must be finished before step V can begin.
 Step H must be finished before step R can begin.
@@ -313,13 +403,85 @@ Step W must be finished before step M can begin.
 func part1() {
     
     do {
-        let steps = try stepsFrom(input: part1Input)
+        let steps = try stepsFrom(input: input)
         print(steps.correctOrder) // Prints "OCPUEFIXHRGWDZABTQJYMNKVSL" (correct!)
     } catch {
         print(error)
     }
 }
 
-let letterTime: [String: Int] = ["A":1, "B":2, "C":3, "D":4, "E":5, "F":6. "G":7, "H":8, "I":9, "J":10, "K":11, "L":12, "M":13, "N":14, "O":15, "P":16, "Q":17, "R":18, "S":19, "T":20, "U":21, "V":22, "W":23, "X":24, "Y":25, "Z":26]
-
 //part1()
+
+func solve(steps: [Step], with workers: [Worker], example: Bool = false) throws -> (sequence: String, time: Int) {
+    var availableSteps = try steps.allReadySteps(example: example)
+    
+    var completedOrder: String = ""
+    var secondsElapsed: Int = 0
+    
+    while availableSteps != [] {
+        let unassignedSteps = availableSteps.unassigned
+        
+        var unassignedIndex: Int = 0
+        
+        forLoop:
+            for (workerIndex, worker) in workers.enumerated() {
+                if worker.stepInProgress == nil {
+                    if let step = unassignedSteps[safe: unassignedIndex] {
+                        worker.assign(step: step)
+                        unassignedIndex += 1
+                    } else {
+                        break forLoop
+                    }
+                }
+        }
+        
+        for worker in workers {
+            let completedID = try worker.incrementStepTime(example: example)
+            if let completedID = completedID {
+                completedOrder += completedID
+            }
+        }
+        
+        secondsElapsed += 1
+        
+        availableSteps = try steps.allReadySteps(example: example)
+    }
+    
+    return (completedOrder, secondsElapsed)
+}
+
+func part2Example() {
+    
+    do {
+        let steps = try stepsFrom(input: exampleInput)
+        let workers = [Worker(), Worker()]
+//        let worker = Worker()
+//        let workersTest = Array(repeating: Worker(), count: 2) // I think this is assigning the same worker (due to being passed by copy), therefore for every cycle of incrementStepTime it is incrementing twice.
+//        print(workers, workersTest)
+//        let workers = Array(repeating: worker, count: 2)
+        
+        let (completedOrder, secondsElapsed) = try solve(steps: steps, with: workers, example: true)
+        
+        print("Completed: \(completedOrder) in \(secondsElapsed) seconds") // Prints "Completed: CABFDE in 15 seconds" (correct!)
+    } catch {
+        print(error)
+    }
+}
+
+//part2Example()
+
+func part2() {
+    do {
+        let steps = try stepsFrom(input: input)
+        let workers = [Worker(), Worker(), Worker(), Worker(), Worker()]
+        
+        let (completedOrder, secondsElapsed) = try solve(steps: steps, with: workers, example: false)
+        
+        print("Completed: \(completedOrder) in \(secondsElapsed) seconds") // Prints "Completed: OPCUXEHFIRWZGDABTQYJMNKVSL in 991 seconds" (Correct!)
+        
+    } catch {
+        print(error)
+    }
+}
+
+//part2()
