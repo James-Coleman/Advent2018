@@ -86,6 +86,20 @@ struct GridPoint {
         let secondPoint = sortedPoints[1]
         return distanceTo(point: firstPoint) == distanceTo(point: secondPoint)
     }
+    
+    func within(range: Int, of points: [GridPoint]) -> Bool {
+        var total: Int = 0
+        
+        for gridpoint in points {
+            let distance = distanceTo(point: gridpoint)
+            total += distance
+            if total > range {
+                return false
+            }
+        }
+        
+        return true
+    }
 }
 
 extension GridPoint: Equatable {
@@ -138,6 +152,45 @@ struct Day6 {
         return stringToReturn
     }
     
+    static func rangeGrid(max: Int, width: Int, height: Int, points: [GridPoint]) -> (withPointIDs: String, withoutPointIDs: String) {
+        var withPointIDs = ""
+        var withoutPointIDs = ""
+        
+        for row in 0..<height {
+            for column in 0...width {
+                if column == width {
+                    withPointIDs += "\n"
+                    withoutPointIDs += "\n"
+                    continue
+                }
+                
+                let point = GridPoint(x: column, y: row)
+                let inRange = point.within(range: max, of: points)
+                
+                if let existingPoint = points.first(where: {$0 == point}), let id = existingPoint.id {
+                    withPointIDs += id
+                } else if inRange {
+                    withPointIDs += "#"
+                } else {
+                    withPointIDs += "."
+                }
+                
+                if inRange {
+                    withoutPointIDs += "#"
+                } else {
+                    withoutPointIDs += "."
+                }
+            }
+        }
+        
+        return (withPointIDs, withoutPointIDs)
+    }
+    
+    static func inRangeCount(grid: String) -> Int {
+        let hashes = grid.filter { $0 == "#" }
+        return hashes.count
+    }
+    
     static func drawGrid(width: Int, height: Int, points: [GridPoint]) {
         let grid = Day6.grid(width: width, height: height, points: points)
         print(grid)
@@ -146,14 +199,6 @@ struct Day6 {
     static func nearestPoint(to point: GridPoint, from array: [GridPoint]) -> GridPoint? {
         let sortedPoints = array.sorted(by: { $0.distanceTo(point: point) < $1.distanceTo(point: point) })
         return sortedPoints.first
-    }
-    
-    static func gridPoints(from seed: String) -> [GridPoint] {
-        var arrayToReturn = [GridPoint]()
-        
-        
-        
-        return arrayToReturn
     }
     
     static func infiniteAndFinitePoints(in grid: String) -> (infinite: Set<Character>, finite: Set<Character>) {
@@ -223,17 +268,20 @@ struct Day6 {
         return characters.count
     }
     
-    static func maxFiniteArea(of grid: String) -> (point: Character, area: Int)? {
+    enum Day6Error: Swift.Error {
+        case notEnoughIds(need: Int)
+        case noPointsInGrid
+    }
+    
+    static func maxFiniteArea(of grid: String) throws -> (point: Character, area: Int)? {
         let finitePoints = Day6.infiniteAndFinitePoints(in: grid).finite
         
         let areas = finitePoints.map { (point: $0, area: Day6.areaOf(point: $0, in: grid)) }
         let sortedAreas = areas.sorted { $0.area > $1.area }
         
-        return sortedAreas.first
-    }
-    
-    enum Day6Error: Swift.Error {
-        case notEnoughIds(need: Int)
+        guard let firstArea = sortedAreas.first else { throw Day6Error.noPointsInGrid }
+        
+        return firstArea
     }
     
     static func gridpoints(from: String) throws -> [GridPoint] {
@@ -264,6 +312,29 @@ let examplePoints = [
     GridPoint(x: 5, y: 5, id: "E"),
     GridPoint(x: 8, y: 9, id: "F")
 ]
+
+let day6ExampleInput = """
+1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9
+"""
+
+/*
+do {
+    let examplePointsFromString = try Day6.gridpoints(from: day6ExampleInput)
+//    let grid = Day6.grid(width: 10, height: 10, points: examplePointsFromString)
+//    print(Day6.maxFiniteArea(of: grid))
+    let rangeGrid = Day6.rangeGrid(max: 31, width: 10, height: 10, points: examplePointsFromString)
+    print(rangeGrid.withPointIDs, "\n", rangeGrid.withoutPointIDs)
+    let rangeCount = Day6.inRangeCount(grid: rangeGrid.withoutPointIDs)
+    print(rangeCount)
+} catch {
+    print(error)
+}
+*/
 
 /*
 Day6.drawGrid(width: 10, height: 10, points: examplePoints)
@@ -329,7 +400,26 @@ let day6Input = """
 
 //day6Input.split(separator: "\n").count // 50
 
-let points = Day6.gridPoints(from: day6Input)
-let grid = Day6.grid(width: 400, height: 400, points: points)
-print(Day6.maxFiniteArea(of: grid))
+func part1() {
+    do {
+        let points = try Day6.gridpoints(from: day6Input)
+        let grid = Day6.grid(width: 400, height: 400, points: points)
+        let maxArea = try Day6.maxFiniteArea(of: grid)
+        print(maxArea)
+    } catch {
+        print(error)
+    }
+}
 
+func part2() {
+    do {
+        let examplePointsFromString = try Day6.gridpoints(from: day6Input)
+        let rangeGrid = Day6.rangeGrid(max: 9_999, width: 400, height: 400, points: examplePointsFromString)
+        let rangeCount = Day6.inRangeCount(grid: rangeGrid.withoutPointIDs)
+        print(rangeCount)
+    } catch {
+        print(error)
+    }
+}
+
+//part2()
