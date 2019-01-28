@@ -3382,6 +3382,6 @@ func day6_part2() {
     }
 }
 
-day6_part2()
+//day6_part2()
 
 print("Took: \(Date().timeIntervalSince(before)) seconds")
