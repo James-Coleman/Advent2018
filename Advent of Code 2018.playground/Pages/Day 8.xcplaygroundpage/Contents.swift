@@ -12,9 +12,10 @@ enum NodeError: Swift.Error {
 }
 
 struct Node {
+    let childCount: Int
     var children: [Node]
-    var metadata: [Int]
     let metaCount: Int
+    var metadata: [Int]?
   
     /*
     init(string: String) throws {
@@ -25,6 +26,7 @@ struct Node {
     
     var sumOfMetadata: Int {
         let childSums = children.map { $0.sumOfMetadata }
+        guard let metadata = metadata else { return 0 }
         let all = childSums + metadata
         return all.reduce(0, +)
     }
@@ -107,7 +109,7 @@ struct Node {
                     return int
                 }
                 
-                let thisNode = Node(children: [], metadata: metaIntArray, metaCount: metaInt)
+                let thisNode = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: metaIntArray)
                 
                 //                print("this node: \(thisNode)")
                 
@@ -128,7 +130,7 @@ struct Node {
                 let remaining = splitString[2...(splitString.count - metaInt - 1)]
                 let remainingString = remaining.reduce("") { "\($0) \($1)" }
                 
-                var node = Node(children: [], metadata: metaIntArray, metaCount: metaInt)
+                var node = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: metaIntArray)
                 
                 // Recurse
                 let children = try Node.stringDecoder2(remainingString: remainingString)
@@ -188,7 +190,7 @@ struct Node {
                     
                 }
                 
-                return Node(children: [], metadata: [], metaCount: 0)
+                return Node(childCount: childInt, children: [], metaCount: 0, metadata: [])
             }
             
             var stringStillRemaining: String {
@@ -232,7 +234,7 @@ struct Node {
                     return int
                 }
                 
-                let thisNode = Node(children: [], metadata: metaIntArray, metaCount: metaInt)
+                let thisNode = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: metaIntArray)
                 
 //                print("this node: \(thisNode)")
                 
@@ -243,7 +245,7 @@ struct Node {
                 
                 let existingParentChildren = parent?.children ?? []
                 let existingParentMeta = parent?.metadata ?? []
-                let newParent = Node(children: existingParentChildren + [thisNode], metadata: existingParentMeta, metaCount: metaInt)
+                let newParent = Node(childCount: childInt, children: existingParentChildren + [thisNode], metaCount: metaInt, metadata: existingParentMeta)
                 
                 return try Node.stringDecoder2(remainingString: recombinedString, parent: newParent)
             } else {
@@ -257,11 +259,11 @@ struct Node {
                 let remaining = splitString[2...(splitString.count - metaInt - 1)]
                 let remainingString = remaining.reduce("") { "\($0) \($1)" }
                 
-                var thisNode = Node(children: [], metadata: metaIntArray, metaCount: metaInt)
+                var thisNode = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: metaIntArray)
                 
                 let existingParentChildren = parent?.children ?? []
                 let existingParentMeta = parent?.metadata ?? []
-                let newParent = Node(children: existingParentChildren + [thisNode], metadata: existingParentMeta, metaCount: metaInt)
+                let newParent = Node(childCount: parent?.childCount ?? 0, children: existingParentChildren + [thisNode], metaCount: parent?.metaCount ?? 0, metadata: existingParentMeta)
                 
                 // Recurse
                 let children = try Node.stringDecoder2(remainingString: remainingString, parent: newParent)
@@ -298,7 +300,7 @@ struct Node {
                     return int
                 }
                 
-                let newNode = Node(children: [], metadata: metaIntArray, metaCount: metaInt) // All parameters are known for certain at this point.
+                let newNode = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: metaIntArray) // All parameters are known for certain at this point.
                 
                 let restOfStringSlice = splitString.suffix(splitString.count - metaInt - 2)
                 let restOfString = restOfStringSlice.joinedWithSpace
@@ -321,7 +323,7 @@ struct Node {
                 // There are child nodes so you don't know exactly where the meta data is.
                 // The child nodes and latter sibling nodes could interfere with the location of the meta data
                 
-                var newNode = Node(children: [], metadata: [], metaCount: metaInt)
+                var newNode = Node(childCount: childInt, children: [], metaCount: metaInt, metadata: [])
                 
                 let restOfStringSlice = splitString.suffix(splitString.count - 2)
                 let restOfString = restOfStringSlice.joinedWithSpace
@@ -378,7 +380,7 @@ struct Node {
 extension Node: CustomStringConvertible {
     var description: String {
         return """
-        Node(children: \(children), metaData: \(metadata)), metaCount: \(metaCount)
+        Node(childCount: \(childCount), children: \(children), metaData: \(metadata), metaCount: \(metaCount))
         """
     }
 }
