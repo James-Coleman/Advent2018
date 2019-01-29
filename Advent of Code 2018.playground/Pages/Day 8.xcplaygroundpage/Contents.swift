@@ -96,7 +96,18 @@ struct Node {
     
     /// This is the value specified in part 2 of the challenge.
     var value: Int {
-        return 0
+        if children.count == 0 {
+            return metaData.reduce(0, +)
+        } else {
+            let chosenChildren = metaData.compactMap { (int) -> Node? in
+                guard 1...children.count ~= int else { return nil } // This is the pattern match operator, and returns true if the int lies in this range.
+                return children[int - 1] // The int is 1-indexed, i.e. 1 refers to the first item in the array
+            }
+            
+            let childValues = chosenChildren.map { $0.value } // This could be combined into the above compactMap but I felt it read better to have it on it's own
+        
+            return childValues.reduce(0, +)
+        }
     }
 }
 
@@ -118,12 +129,13 @@ let oneParentThreeChildren = "3 3 0 3 1 2 3 0 3 4 5 6 0 3 7 8 9 10 11 12"
  */
 
 do {
+//    let test = try Node(string: testString)          // Success
+//    print(test)
+//    print(test.sumOfMetadata)                                       // Returns 138 (correct!)
+//    print(test.value) // Returns 66 (correct!)
     /*
-    let test = try Node.stringDecoder5(string: testString)          // Success
-    print(test)
-    print(test.sumOfMetadata)                                       // Returns 138 (correct!)
-    print(try Node.stringDecoder5(string: modifiedTestString))      // Success
-    print(try Node.stringDecoder5(string: oneParentThreeChildren))  // Success
+    print(try Node(string: modifiedTestString))      // Success
+    print(try Node(string: oneParentThreeChildren))  // Success
     
     let test2 = try Node(string: testString)
     print(test2)
@@ -152,6 +164,7 @@ let part1Input = """
 do {
 //    let node = try Node(string: part1Input)
 //    print(node.sumOfMetadata) // returns 49180, correct!
+//    print(node.value)         // returns 20611, correct!
 } catch {
     print(error)
 }
