@@ -27,10 +27,8 @@ extension String {
 }
 
 struct Node {
-    let childCount: Int
-    var children: [Node]
-    let metaCount: Int
-    var metadata: [Int]
+    let children: [Node]
+    let metaData: [Int]
   
     /*
     init(string: String) throws {
@@ -41,21 +39,21 @@ struct Node {
     
     /// The total number of children that this node has, including all generations of descendants (grandchildren, great-grandchildren etc)
     var descendantCount: Int {
-        let childCounts = children.map { $0.childCount }
+        let childCounts = children.map { $0.descendantCount }
         let childSum = childCounts.reduce(0, +)
-        return childSum + childCount
+        return childSum + children.count
     }
     
     var sumOfMetadata: Int {
         let childSums = children.map { $0.sumOfMetadata }
-        let all = childSums + metadata
+        let all = childSums + metaData
         return all.reduce(0, +)
     }
     
     var descendantMetaCount: Int {
-        let childCounts = children.map { $0.metaCount }
+        let childCounts = children.map { $0.descendantMetaCount }
         let childSum = childCounts.reduce(0, +)
-        return childSum + metaCount
+        return childSum + metaData.count
     }
     
     /**
@@ -110,7 +108,7 @@ struct Node {
         
         let metaData = Array(restOfInts[..<metaCount])
         
-        let newNode = Node(childCount: childCount, children: children, metaCount: metaCount, metadata: metaData)
+        let newNode = Node(children: children, metaData: metaData)
             
         return newNode
     }
@@ -119,7 +117,7 @@ struct Node {
 extension Node: CustomStringConvertible {
     var description: String {
         return """
-        Node(childCount: \(childCount), children: \(children), metaData: \(metadata), metaCount: \(metaCount))
+        Node(children: \(children), metaData: \(metaData))
         """
     }
 }
