@@ -1,14 +1,52 @@
 import Foundation
 
+enum NodeError: Swift.Error {
+    case isNotInt(string: String)
+    case remainingStringIsEmptyButParentDoesNotExist
+    case notEnoughHeaders
+    case noInputStringOrIntArray
+}
+
 extension ArraySlice where Element: StringProtocol {
     var joinedWithSpace: String {
         return self.reduce("") { "\($0) \($1)" }
     }
 }
 
-enum NodeError: Swift.Error {
-    case isNotInt(string: String)
-    case remainingStringIsEmptyButParentDoesNotExist
+extension String {
+    /**
+     Returns an array of integers from the string.
+     
+     Assumes the source string (`self`) is a string of integers seperated by a space.
+     
+     - throws: NodeError.isNotInt if it finds a string which cannot be cast to an Int.
+     */
+    func intArray() throws -> [Int] {
+        let split = self.split(separator: " ")
+        let strings = split.map { String($0) }
+        let ints = try strings.map { string -> Int in
+            guard let int = Int(string) else { throw NodeError.isNotInt(string: string) }
+            return int
+        }
+        return ints
+    }
+    
+    func headers() throws -> (childCount: Int, metaCount: Int) {
+        let ints = try self.intArray()
+        guard ints.count >= 2 else { throw NodeError.notEnoughHeaders }
+        return (ints[0], ints[1])
+    }
+    
+    var withoutHeaders: String {
+        return String(self.suffix(self.count - 2))
+    }
+}
+
+extension Array where Element == Int {
+    func headers() throws -> (childCount: Int, metaCount: Int) {
+        guard self.count >= 2 else { throw NodeError.notEnoughHeaders }
+        return (self[0], self[1])
+    }
 }
 
 struct Node {
@@ -24,6 +62,13 @@ struct Node {
     }
     */
     
+    /// The total number of children that this node has, including all generations of descendants (grandchildren, great-grandchildren etc)
+    var descendantCount: Int {
+        let childCounts = children.map { $0.childCount }
+        let childSum = childCounts.reduce(0, +)
+        return childSum + childCount
+    }
+    
     var sumOfMetadata: Int {
         let childSums = children.map { $0.sumOfMetadata }
         guard let metadata = metadata else { return 0 }
@@ -31,9 +76,10 @@ struct Node {
         return all.reduce(0, +)
     }
     
-    var childMetaCount: Int {
+    var descendantMetaCount: Int {
         let childCounts = children.map { $0.metaCount }
-        return childCounts.reduce(0, +)
+        let childSum = childCounts.reduce(0, +)
+        return childSum + metaCount
     }
     
     /**
@@ -275,6 +321,86 @@ struct Node {
         }
     }
     
+    /**
+     - parameter decodingChildren: If we know for certain that we are decoding a child node, this can be passed in as `true` and we will treat the start of the `remainingString` as the headers. Otherwise, they will be treated as possible meta data for the latest sibling.
+     */
+    static func stringDecoder5(string: String? = nil, ints: [Int]? = nil/*, decodingHeaders: Bool = true, parent: Node? = nil*/) throws -> Node {
+        // I don't think this makes sense anymore, because we are not cutting off the end of the input string (only the start), we know exactly when the remainingString will be "" i.e. it will be at the very end of the process.
+        /*
+        if remainingString == "" {
+            guard let parent = parent else { throw NodeError.remainingStringIsEmptyButParentDoesNotExist }
+            return [parent]
+        } else
+        */
+        
+        /*
+        if let parent = parent, parent.childCount == parent.children.count {
+            // The parent is complete and should be returned
+            // There might still be a string
+            return [parent]
+        } else {
+            
+            // while children.count < childCount
+            // get the children by recursing
+        }
+        */
+        
+//        let ints = try remainingString.intArray()
+        
+        // Start at the beginning.
+//        if decodingHeaders {
+        func properIntsFunction() throws -> [Int] {
+            if let ints = ints {
+                return ints
+            } else if let string = string {
+                let intArray = try string.intArray()
+                return intArray
+            } else {
+                throw NodeError.noInputStringOrIntArray
+            }
+        }
+        
+        let properInts = try properIntsFunction()
+//        print("properInts:", properInts)
+        
+        guard properInts.count >= 2 else { throw NodeError.notEnoughHeaders }
+        
+        let (childCount, metaCount) = (properInts[0], properInts[1])
+        
+        var restOfInts = Array(properInts[2...])
+        /*
+        {
+            didSet {
+                print("restOfInts:", restOfInts)
+            }
+        }
+        */
+        
+        var children: [Node] = []
+        
+        while children.count < childCount {
+            let nextChild = try Node.stringDecoder5(ints: restOfInts)
+//            print(nextChild)
+            children += [nextChild]
+            // Need to work out exactly how much of the string to strip out.
+            // This will be the total number of children * 2 (for the headers) plus the total count of meta data
+            let descendantCount = nextChild.descendantCount + 1 // + 1 to account for this child itself
+            let totalHeaderCount = descendantCount * 2
+            let descendantMetaCount = nextChild.descendantMetaCount
+            let totalToRemove = totalHeaderCount + descendantMetaCount
+            restOfInts = Array(restOfInts[totalToRemove...])
+        }
+        
+        // The rest is meta
+        
+        let metaData = Array(restOfInts[..<metaCount])
+        
+        let newNode = Node(childCount: childCount, children: children, metaCount: metaCount, metadata: metaData)
+            
+        return newNode
+//        }
+    }
+    
     static func metaCountDecoder(remainingString: String, /*parent: Node? = nil,*/ siblings: [Node] = []) throws -> [Node] {
         if remainingString == "" {
             return siblings
@@ -446,8 +572,9 @@ extension StringNode: CustomStringConvertible {
 
 let testString = "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2"
 let modifiedTestString = "2 3 1 3 0 1 98 10 11 12 1 1 0 1 99 2 1 1 2" // Has an extra child inside B.
-let allSiblingsNoChildren = "0 1 1 0 1 1 0 1 1 0 1 1"
-let oneParentThreeChildren = "1 3 0 3 1 2 3 0 3 4 5 6 0 3 7 8 9 10 11 12"
+let allSiblingsNoChildren = "0 1 1 0 1 1 0 1 1 0 1 1" // This test string is fundamentally flawed, there cannot be a tree without a root node. This is (1 reason) why it was failing
+let oneParentThreeChildren = "1 3 0 3 1 2 3 0 3 4 5 6 0 3 7 8 9 10 11 12" // This test string was also flawed, it specified a single child, when it actually has 3
+let oneParentThreeChildrenModified = "3 3 0 3 1 2 3 0 3 4 5 6 0 3 7 8 9 10 11 12" // This test string was also flawed, it specified a single child, when it actually has 3
 
 /*
  The real input string is nearly 39_000 characters long, with nearly 19_000 seperate integers.
@@ -477,6 +604,12 @@ do {
 //    print(try StringNode.stringDecoder(remainingString: modifiedTestString)) // Same thing as before is happening. It thinks the meta of B is actually the headers of a new Node
     
 //    print(try Node.metaCountDecoder(remainingString: oneParentThreeChildren)) // Fatal error, see FIXME in metaCountDecoder
+    
+    let test = try Node.stringDecoder5(string: testString)                  // Success
+    print(test)
+    print(test.sumOfMetadata)                                               // Returns 138 (correct!)
+    print(try Node.stringDecoder5(string: modifiedTestString))              // Success
+    print(try Node.stringDecoder5(string: oneParentThreeChildrenModified))  // Success
     
 /*
     let nodes3 = try Node.stringDecoder3(remainingString: testString)
