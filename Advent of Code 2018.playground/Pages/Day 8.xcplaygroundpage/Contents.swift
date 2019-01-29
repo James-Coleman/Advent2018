@@ -28,11 +28,6 @@ extension String {
 struct Node {
     let children: [Node]
     let metaData: [Int]
-  
-    init(children: [Node], metaData: [Int]) {
-        self.children = children
-        self.metaData = metaData
-    }
     
     init(string: String? = nil, ints: [Int]? = nil) throws {
         // Start at the beginning.
@@ -48,26 +43,17 @@ struct Node {
         }
         
         let properInts = try properIntsFunction()
-        //        print("properInts:", properInts)
         
         guard properInts.count >= 2 else { throw NodeError.notEnoughHeaders }
         
         let (childCount, metaCount) = (properInts[0], properInts[1])
         
         var restOfInts = Array(properInts[2...])
-        /*
-         {
-         didSet {
-         print("restOfInts:", restOfInts)
-         }
-         }
-         */
         
         var children: [Node] = []
         
         while children.count < childCount {
             let nextChild = try Node(ints: restOfInts)
-            //            print(nextChild)
             children += [nextChild]
             // Need to work out exactly how much of the string to strip out.
             // This will be the total number of children * 2 (for the headers) plus the total count of meta data
@@ -93,16 +79,24 @@ struct Node {
         return childSum + children.count
     }
     
+    /// The count of the total number of metadata items for this node and all of it's descendants.
+    var descendantMetaCount: Int {
+        let childCounts = children.map { $0.descendantMetaCount }
+        let childSum = childCounts.reduce(0, +)
+        return childSum + metaData.count
+    }
+    
+    /// This is the sum requested in part 1 of the challenge.
+    /// It is the sum of the metaData integers of this node and all descendant nodes.
     var sumOfMetadata: Int {
         let childSums = children.map { $0.sumOfMetadata }
         let all = childSums + metaData
         return all.reduce(0, +)
     }
     
-    var descendantMetaCount: Int {
-        let childCounts = children.map { $0.descendantMetaCount }
-        let childSum = childCounts.reduce(0, +)
-        return childSum + metaData.count
+    /// This is the value specified in part 2 of the challenge.
+    var value: Int {
+        return 0
     }
 }
 
