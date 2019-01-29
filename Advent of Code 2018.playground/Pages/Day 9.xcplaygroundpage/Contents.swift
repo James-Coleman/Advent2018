@@ -33,7 +33,7 @@ func highestScore(playerCount: Int, marbleCount: Int) throws -> Int {
     /// Note that this is 1 indexed, not 0 indexed
     var currentPlayer = 1
     
-    let seedArray = [Int](1...9)
+    let seedArray = [Int](1...playerCount)
     var players = seedArray.map { Player(id: $0) }
     
     while let marble = marbleBag.first {
@@ -99,7 +99,11 @@ func highestScore(playerCount: Int, marbleCount: Int) throws -> Int {
     
 }
 
-let example0 = highestScore(playerCount: 9, marbleCount: 25)
-let example1 = highestScore(playerCount: 10, marbleCount: 1618) // Currently returning 10132 but should be 8317
+do {
+    let example0 = try highestScore(playerCount: 9, marbleCount: 25)
+    let example1 = try highestScore(playerCount: 10, marbleCount: 1618) // Correctly returning 8317
+} catch {
+    print(error)
+}
 
 
