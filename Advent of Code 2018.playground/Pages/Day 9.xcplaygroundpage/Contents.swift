@@ -2,7 +2,6 @@ import Foundation
 
 struct Player {
     let id: Int
-//    var marbles: [Int]
     var scoredMarbles: [Int] = []
     
     var score: Int {
@@ -13,13 +12,6 @@ struct Player {
     init(id: Int) {
         self.id = id
     }
-    
-    /*
-    init(id: Int, marbleCount: Int, playerCount: Int) {
-        self.id = id
-        self.marbles = stride(from: id, through: marbleCount, by: playerCount).map { $0 }
-    }
-    */
 }
 
 enum PlayerError: Swift.Error {
