@@ -3520,4 +3520,912 @@ func day9Part2() {
 
 //day9Part2()
 
+import CoreGraphics
+
+struct Point {
+    let position: CGPoint
+    let velocity: CGPoint
+    
+    enum PointError: Swift.Error {
+        case wrongInitStringCount(actualCount: Int)
+        case isNotInt(string: String)
+        case emptyArray
+    }
+    
+    init(position: CGPoint, velocity: CGPoint) {
+        self.position = position
+        self.velocity = velocity
+    }
+    
+    init(string: String) throws {
+        let splitString = string.split { (character) -> Bool in
+            if character == "<" {
+                return true
+            } else if character == " " {
+                return true
+            } else if character == "," {
+                return true
+            } else if character == ">" {
+                return true
+            } else {
+                return false
+            }
+        }
+        
+        let splitStringCount = splitString.count
+        guard splitStringCount == 6 else { throw PointError.wrongInitStringCount(actualCount: splitStringCount) }
+        
+        let array = [splitString[1], splitString[2], splitString[4], splitString[5]]
+        let intArray = try array.map { substring -> Int in
+            guard let int = Int(substring) else { throw PointError.isNotInt(string: String(substring)) }
+            return int
+        }
+        
+        self.position = CGPoint(x: intArray[0], y: intArray[1])
+        self.velocity = CGPoint(x: intArray[2], y: intArray[3])
+    }
+    
+    var asInputString: String {
+        let positionXInt = Int(position.x)
+        let positionYInt = Int(position.y)
+        let velocityXInt = Int(velocity.x)
+        let velocityYInt = Int(velocity.y)
+        
+        return "position=<\(positionXInt),\(positionYInt)> velocity=<\(velocityXInt),\(velocityYInt)>"
+    }
+    
+    public static func pointArray(from: String) throws -> [Point] {
+        let splitArray = from.split(separator: "\n")
+        let pointArray = try splitArray.map { try Point(string: String($0)) }
+        return pointArray
+    }
+    
+    public static func gridSize(from points: [Point]) throws -> CGRect {
+        let sortedByX = points.sorted { $0.position.x < $1.position.x }
+        let sortedByY = points.sorted { $0.position.y < $1.position.y }
+        
+        guard
+            let firstX = sortedByX.first,
+            let lastX = sortedByX.last,
+            let firstY = sortedByY.first,
+            let lastY = sortedByY.last
+            else { throw PointError.emptyArray }
+        
+        let floatX = firstX.position.x
+        let x = Int(floatX)
+        
+        let floatY = firstY.position.y
+        let y = Int(floatY)
+        
+        let floatWidth = lastX.position.x - firstX.position.x
+        let width = Int(floatWidth)
+        
+        let floatHeight = lastY.position.y - firstY.position.y
+        let height = Int(floatHeight)
+        
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+    
+    public static func grid(from points: [Point], pointCharacter: Character = "#", blankCharacter: Character = ".") throws -> String {
+        let rect = try Point.gridSize(from: points)
+        
+        let minX = Int(rect.minX)
+        let maxX = Int(rect.maxX)
+        let minY = Int(rect.minY)
+        let maxY = Int(rect.maxY)
+        
+        var stringToReturn = ""
+        
+        for y in minY...maxY {
+            for x in minX...maxX {
+                let cgX = CGFloat(x)
+                let cgY = CGFloat(y)
+                
+                if points.contains(where: { (point) -> Bool in
+                    return point.position.x == cgX && point.position.y == cgY
+                }) {
+                    stringToReturn.append(pointCharacter)
+                } else {
+                    stringToReturn.append(blankCharacter)
+                }
+                
+                if x == maxX {
+                    stringToReturn += "\n"
+                }
+            }
+        }
+        
+        return stringToReturn
+    }
+    
+    public static func grid(from string: String) throws -> String {
+        let points = try Point.pointArray(from: string)
+        return try Point.grid(from: points)
+    }
+    
+    public static func nextGeneration(from points: [Point]) -> [Point] {
+        return points.map { (point) -> Point in
+            let newXPosition = point.position.x + point.velocity.x
+            let newYPosition = point.position.y + point.velocity.y
+            let newPosition = CGPoint(x: newXPosition, y: newYPosition)
+            return Point(position: newPosition, velocity: point.velocity)
+        }
+    }
+}
+
+let day10Part1Input = """
+position=< 53777,  21594> velocity=<-5, -2>
+position=< 53761,  53776> velocity=<-5, -5>
+position=<-32066,  53779> velocity=< 3, -5>
+position=<-21287,  43043> velocity=< 2, -4>
+position=< 10848, -42773> velocity=<-1,  4>
+position=<-10596,  53770> velocity=< 1, -5>
+position=<-42798,  53772> velocity=< 4, -5>
+position=<-21308, -32037> velocity=< 2,  3>
+position=<-21332,  10863> velocity=< 2, -1>
+position=<-10596, -21313> velocity=< 1,  2>
+position=<-42750, -53498> velocity=< 4,  5>
+position=<-10569, -21315> velocity=< 1,  2>
+position=<-21334,  53779> velocity=< 2, -5>
+position=< 43055, -10586> velocity=<-4,  1>
+position=< 21588, -21313> velocity=<-2,  2>
+position=< 53795,  32316> velocity=<-5, -3>
+position=< 43061, -21319> velocity=<-4,  2>
+position=<-10590, -21317> velocity=< 1,  2>
+position=<-21344, -32042> velocity=< 2,  3>
+position=<-53491, -42769> velocity=< 5,  4>
+position=< 53801,  21595> velocity=<-5, -2>
+position=< 43055, -42771> velocity=<-4,  4>
+position=<-32027, -21319> velocity=< 3,  2>
+position=< 43068,  21598> velocity=<-4, -2>
+position=< 32307, -53499> velocity=<-3,  5>
+position=< 53787, -53491> velocity=<-5,  5>
+position=<-21288,  53778> velocity=< 2, -5>
+position=<-42787,  10862> velocity=< 4, -1>
+position=<-53522,  32325> velocity=< 5, -3>
+position=<-53513,  21595> velocity=< 5, -2>
+position=<-42741, -32042> velocity=< 4,  3>
+position=< 43022, -53495> velocity=<-4,  5>
+position=< 43076,  21593> velocity=<-4, -2>
+position=< 53757, -10589> velocity=<-5,  1>
+position=<-32035,  43047> velocity=< 3, -4>
+position=< 32328, -42768> velocity=<-3,  4>
+position=< 21608, -53500> velocity=<-2,  5>
+position=< 53790, -21318> velocity=<-5,  2>
+position=<-10561, -32038> velocity=< 1,  3>
+position=<-32068, -42768> velocity=< 3,  4>
+position=< 10861, -10587> velocity=<-1,  1>
+position=< 43068,  53779> velocity=<-4, -5>
+position=< 21568, -10592> velocity=<-2,  1>
+position=<-42766, -10584> velocity=< 4,  1>
+position=<-53469, -10585> velocity=< 5,  1>
+position=< 21564,  32322> velocity=<-2, -3>
+position=<-42762, -32037> velocity=< 4,  3>
+position=< 21576, -10587> velocity=<-2,  1>
+position=<-10567,  53774> velocity=< 1, -5>
+position=<-21283,  21589> velocity=< 2, -2>
+position=<-32022, -32042> velocity=< 3,  3>
+position=<-21309,  10871> velocity=< 2, -1>
+position=< 53778,  53774> velocity=<-5, -5>
+position=<-53493, -21317> velocity=< 5,  2>
+position=< 43023, -42766> velocity=<-4,  4>
+position=< 43030, -42768> velocity=<-4,  4>
+position=< 10853,  21597> velocity=<-1, -2>
+position=< 21584,  53778> velocity=<-2, -5>
+position=<-53492,  53770> velocity=< 5, -5>
+position=<-21309, -10592> velocity=< 2,  1>
+position=<-10573, -53497> velocity=< 1,  5>
+position=<-53513, -10592> velocity=< 5,  1>
+position=<-42750, -42768> velocity=< 4,  4>
+position=< 21589,  32321> velocity=<-2, -3>
+position=< 43042,  21594> velocity=<-4, -2>
+position=< 32308, -10590> velocity=<-3,  1>
+position=<-32055, -21315> velocity=< 3,  2>
+position=<-21318, -42767> velocity=< 2,  4>
+position=<-53501,  10864> velocity=< 5, -1>
+position=<-53474, -53496> velocity=< 5,  5>
+position=<-53513, -21318> velocity=< 5,  2>
+position=<-10617, -21318> velocity=< 1,  2>
+position=< 10869, -42770> velocity=<-1,  4>
+position=< 43034, -21318> velocity=<-4,  2>
+position=< 53785,  21597> velocity=<-5, -2>
+position=<-32070, -53491> velocity=< 3,  5>
+position=<-42771, -32039> velocity=< 4,  3>
+position=<-42786, -32045> velocity=< 4,  3>
+position=<-10597,  53777> velocity=< 1, -5>
+position=<-32023, -32042> velocity=< 3,  3>
+position=< 53787, -10592> velocity=<-5,  1>
+position=<-21318,  53776> velocity=< 2, -5>
+position=<-10585, -53499> velocity=< 1,  5>
+position=< 32315,  32323> velocity=<-3, -3>
+position=< 53794, -53496> velocity=<-5,  5>
+position=< 10864, -42766> velocity=<-1,  4>
+position=<-32055, -42770> velocity=< 3,  4>
+position=<-53467,  53770> velocity=< 5, -5>
+position=< 32295,  53770> velocity=<-3, -5>
+position=< 32291, -32038> velocity=<-3,  3>
+position=<-32053,  21593> velocity=< 3, -2>
+position=< 10888,  43047> velocity=<-1, -4>
+position=< 53777,  53776> velocity=<-5, -5>
+position=< 43070,  43052> velocity=<-4, -4>
+position=<-53509,  53775> velocity=< 5, -5>
+position=< 43047, -21310> velocity=<-4,  2>
+position=< 10896,  53774> velocity=<-1, -5>
+position=< 10861,  32320> velocity=<-1, -3>
+position=< 21601,  43050> velocity=<-2, -4>
+position=< 53749, -21314> velocity=<-5,  2>
+position=<-10566,  43043> velocity=< 1, -4>
+position=< 53747, -32037> velocity=<-5,  3>
+position=< 21593, -42773> velocity=<-2,  4>
+position=<-42782,  21598> velocity=< 4, -2>
+position=<-21299, -10592> velocity=< 2,  1>
+position=<-42766, -10592> velocity=< 4,  1>
+position=< 43022, -21311> velocity=<-4,  2>
+position=< 53801, -21314> velocity=<-5,  2>
+position=<-42742,  53779> velocity=< 4, -5>
+position=< 43042,  10862> velocity=<-4, -1>
+position=<-32066,  32322> velocity=< 3, -3>
+position=< 53746,  10871> velocity=<-5, -1>
+position=< 43038,  43050> velocity=<-4, -4>
+position=< 32349, -10588> velocity=<-3,  1>
+position=< 10858,  53778> velocity=<-1, -5>
+position=< 32304, -42773> velocity=<-3,  4>
+position=< 43042, -53499> velocity=<-4,  5>
+position=< 43035,  10864> velocity=<-4, -1>
+position=<-32021,  21593> velocity=< 3, -2>
+position=<-53501, -53494> velocity=< 5,  5>
+position=< 43074,  32325> velocity=<-4, -3>
+position=< 21620, -53499> velocity=<-2,  5>
+position=<-21320,  32322> velocity=< 2, -3>
+position=< 43050,  53779> velocity=<-4, -5>
+position=<-10601, -32045> velocity=< 1,  3>
+position=< 21608, -21310> velocity=<-2,  2>
+position=<-42794, -10592> velocity=< 4,  1>
+position=< 53750,  10863> velocity=<-5, -1>
+position=<-21341, -53500> velocity=< 2,  5>
+position=< 32348,  10871> velocity=<-3, -1>
+position=< 32307, -21316> velocity=<-3,  2>
+position=<-32019, -32042> velocity=< 3,  3>
+position=< 53774, -32046> velocity=<-5,  3>
+position=<-21286, -42764> velocity=< 2,  4>
+position=<-10615,  21598> velocity=< 1, -2>
+position=< 21604,  32316> velocity=<-2, -3>
+position=< 32312, -53491> velocity=<-3,  5>
+position=<-21339, -42764> velocity=< 2,  4>
+position=<-42766,  43047> velocity=< 4, -4>
+position=< 10888, -32037> velocity=<-1,  3>
+position=< 53754,  21598> velocity=<-5, -2>
+position=< 21576,  32320> velocity=<-2, -3>
+position=< 21580, -21317> velocity=<-2,  2>
+position=< 53750, -32041> velocity=<-5,  3>
+position=<-21323, -53495> velocity=< 2,  5>
+position=< 43066,  21592> velocity=<-4, -2>
+position=< 10840, -32046> velocity=<-1,  3>
+position=< 32343,  53774> velocity=<-3, -5>
+position=<-10564,  53779> velocity=< 1, -5>
+position=< 21590, -32043> velocity=<-2,  3>
+position=< 21612,  43046> velocity=<-2, -4>
+position=< 21576, -21312> velocity=<-2,  2>
+position=< 53777, -32044> velocity=<-5,  3>
+position=<-53493,  10863> velocity=< 5, -1>
+position=< 32332,  10871> velocity=<-3, -1>
+position=< 10880,  53774> velocity=<-1, -5>
+position=<-53482,  32320> velocity=< 5, -3>
+position=< 10889,  10862> velocity=<-1, -1>
+position=<-10558, -32037> velocity=< 1,  3>
+position=<-21304,  10870> velocity=< 2, -1>
+position=<-32034,  21590> velocity=< 3, -2>
+position=<-32039, -42770> velocity=< 3,  4>
+position=< 53770,  53775> velocity=<-5, -5>
+position=< 32332,  21595> velocity=<-3, -2>
+position=< 32349,  53770> velocity=<-3, -5>
+position=< 10886, -53496> velocity=<-1,  5>
+position=<-32070,  21589> velocity=< 3, -2>
+position=< 21606,  10871> velocity=<-2, -1>
+position=<-42750, -53492> velocity=< 4,  5>
+position=< 53772,  10869> velocity=<-5, -1>
+position=<-42753,  43045> velocity=< 4, -4>
+position=<-21316, -53499> velocity=< 2,  5>
+position=<-32066, -53492> velocity=< 3,  5>
+position=<-53509,  32319> velocity=< 5, -3>
+position=<-42774, -42764> velocity=< 4,  4>
+position=< 32318, -42771> velocity=<-3,  4>
+position=<-21302,  53775> velocity=< 2, -5>
+position=< 32349, -42764> velocity=<-3,  4>
+position=< 10893, -32039> velocity=<-1,  3>
+position=< 43022,  21597> velocity=<-4, -2>
+position=< 43062, -10583> velocity=<-4,  1>
+position=<-32066,  10870> velocity=< 3, -1>
+position=< 10848, -42764> velocity=<-1,  4>
+position=< 32325,  10866> velocity=<-3, -1>
+position=<-53514,  53779> velocity=< 5, -5>
+position=<-21317,  21591> velocity=< 2, -2>
+position=<-53476, -32037> velocity=< 5,  3>
+position=<-10617,  43046> velocity=< 1, -4>
+position=<-42795,  53779> velocity=< 4, -5>
+position=< 53758, -10592> velocity=<-5,  1>
+position=<-10615, -53500> velocity=< 1,  5>
+position=< 21620,  10867> velocity=<-2, -1>
+position=< 10874, -42771> velocity=<-1,  4>
+position=< 32315,  53778> velocity=<-3, -5>
+position=<-53490, -32042> velocity=< 5,  3>
+position=< 21596,  10869> velocity=<-2, -1>
+position=<-32027, -10589> velocity=< 3,  1>
+position=< 53782,  53778> velocity=<-5, -5>
+position=<-53469,  10862> velocity=< 5, -1>
+position=<-32068,  43052> velocity=< 3, -4>
+position=< 32339, -53500> velocity=<-3,  5>
+position=< 21624, -42764> velocity=<-2,  4>
+position=< 43039,  53771> velocity=<-4, -5>
+position=< 32307, -32046> velocity=<-3,  3>
+position=<-53469,  10864> velocity=< 5, -1>
+position=< 32323, -53491> velocity=<-3,  5>
+position=< 32324, -10592> velocity=<-3,  1>
+position=< 21584,  21596> velocity=<-2, -2>
+position=<-42741,  32320> velocity=< 4, -3>
+position=<-32066,  32317> velocity=< 3, -3>
+position=< 10849,  32323> velocity=<-1, -3>
+position=< 53778, -21310> velocity=<-5,  2>
+position=<-10569,  10868> velocity=< 1, -1>
+position=< 21607, -42764> velocity=<-2,  4>
+position=< 32325, -53500> velocity=<-3,  5>
+position=<-42742, -42770> velocity=< 4,  4>
+position=< 21614,  21598> velocity=<-2, -2>
+position=< 21596,  53771> velocity=<-2, -5>
+position=< 10849, -10592> velocity=<-1,  1>
+position=<-32039,  53775> velocity=< 3, -5>
+position=< 43047, -21319> velocity=<-4,  2>
+position=<-10583,  53779> velocity=< 1, -5>
+position=<-21332,  43046> velocity=< 2, -4>
+position=< 21566,  43052> velocity=<-2, -4>
+position=< 53785, -21310> velocity=<-5,  2>
+position=< 32303, -21319> velocity=<-3,  2>
+position=< 43070, -21310> velocity=<-4,  2>
+position=< 43062,  21589> velocity=<-4, -2>
+position=<-53469, -42773> velocity=< 5,  4>
+position=< 43070,  43052> velocity=<-4, -4>
+position=<-42794,  43048> velocity=< 4, -4>
+position=<-10582,  32316> velocity=< 1, -3>
+position=< 21585,  32320> velocity=<-2, -3>
+position=< 21585, -10591> velocity=<-2,  1>
+position=< 32312,  32322> velocity=<-3, -3>
+position=< 43036, -53497> velocity=<-4,  5>
+position=<-42770,  43044> velocity=< 4, -4>
+position=<-10569, -42772> velocity=< 1,  4>
+position=< 21621, -53500> velocity=<-2,  5>
+position=< 53777,  32322> velocity=<-5, -3>
+position=<-10591,  43049> velocity=< 1, -4>
+position=< 43037, -42768> velocity=<-4,  4>
+position=<-53505, -53492> velocity=< 5,  5>
+position=< 32296, -53495> velocity=<-3,  5>
+position=< 21585, -53493> velocity=<-2,  5>
+position=< 21600, -42769> velocity=<-2,  4>
+position=< 53797, -53496> velocity=<-5,  5>
+position=< 10885,  10865> velocity=<-1, -1>
+position=<-42766, -21314> velocity=< 4,  2>
+position=< 32304,  53770> velocity=<-3, -5>
+position=< 21564, -53497> velocity=<-2,  5>
+position=< 21621,  32325> velocity=<-2, -3>
+position=< 10838,  53770> velocity=<-1, -5>
+position=< 21598,  43052> velocity=<-2, -4>
+position=< 53785, -32037> velocity=<-5,  3>
+position=< 53806,  10871> velocity=<-5, -1>
+position=<-21285, -21315> velocity=< 2,  2>
+position=<-42761,  10870> velocity=< 4, -1>
+position=<-42748, -42773> velocity=< 4,  4>
+position=< 21600, -32046> velocity=<-2,  3>
+position=<-32063,  21596> velocity=< 3, -2>
+position=<-42782, -21317> velocity=< 4,  2>
+position=< 32323,  53779> velocity=<-3, -5>
+position=<-21328,  10866> velocity=< 2, -1>
+position=< 43076, -53491> velocity=<-4,  5>
+position=<-53477, -32040> velocity=< 5,  3>
+position=<-32055, -21312> velocity=< 3,  2>
+position=< 53805,  32316> velocity=<-5, -3>
+position=<-32038,  21593> velocity=< 3, -2>
+position=<-42761, -42770> velocity=< 4,  4>
+position=<-21303,  53770> velocity=< 2, -5>
+position=< 53766, -42771> velocity=<-5,  4>
+position=<-32066, -21318> velocity=< 3,  2>
+position=<-21320, -53497> velocity=< 2,  5>
+position=< 43039, -53497> velocity=<-4,  5>
+position=<-10616, -42764> velocity=< 1,  4>
+position=<-53477, -10585> velocity=< 5,  1>
+position=<-32012,  32316> velocity=< 3, -3>
+position=<-32047, -53500> velocity=< 3,  5>
+position=<-32023,  32321> velocity=< 3, -3>
+position=<-32059, -21311> velocity=< 3,  2>
+position=< 21620,  53773> velocity=<-2, -5>
+position=<-10589,  53778> velocity=< 1, -5>
+position=< 10837,  32323> velocity=<-1, -3>
+position=<-53505, -53492> velocity=< 5,  5>
+position=<-53525,  10864> velocity=< 5, -1>
+position=<-32047,  32323> velocity=< 3, -3>
+position=< 21575, -53491> velocity=<-2,  5>
+position=<-42738,  53774> velocity=< 4, -5>
+position=<-32015, -21315> velocity=< 3,  2>
+position=< 32307, -42771> velocity=<-3,  4>
+position=< 43042,  10862> velocity=<-4, -1>
+position=<-10580, -42767> velocity=< 1,  4>
+position=< 10877,  43050> velocity=<-1, -4>
+position=<-32052, -10586> velocity=< 3,  1>
+position=< 10856,  21594> velocity=<-1, -2>
+position=<-10572,  10864> velocity=< 1, -1>
+position=< 10849,  21591> velocity=<-1, -2>
+position=<-32045, -21316> velocity=< 3,  2>
+position=<-53477,  43052> velocity=< 5, -4>
+position=< 43055, -53494> velocity=<-4,  5>
+position=< 10869, -53496> velocity=<-1,  5>
+position=< 10865,  43051> velocity=<-1, -4>
+position=< 10886, -10583> velocity=<-1,  1>
+position=< 21585, -10588> velocity=<-2,  1>
+position=<-42758, -42766> velocity=< 4,  4>
+position=< 21607, -53491> velocity=<-2,  5>
+position=<-32012,  53779> velocity=< 3, -5>
+position=< 53782, -42768> velocity=<-5,  4>
+position=< 10837,  43044> velocity=<-1, -4>
+position=<-32066, -32038> velocity=< 3,  3>
+position=<-53483,  10871> velocity=< 5, -1>
+position=<-21299,  53779> velocity=< 2, -5>
+position=< 53794,  53770> velocity=<-5, -5>
+position=< 32316, -21315> velocity=<-3,  2>
+position=< 32303,  10867> velocity=<-3, -1>
+position=< 43068,  53774> velocity=<-4, -5>
+position=< 32315, -53493> velocity=<-3,  5>
+position=< 53782, -53497> velocity=<-5,  5>
+position=< 32307,  32323> velocity=<-3, -3>
+position=<-10617, -10590> velocity=< 1,  1>
+position=<-21335,  10871> velocity=< 2, -1>
+position=<-21336, -21311> velocity=< 2,  2>
+position=< 43052,  43043> velocity=<-4, -4>
+position=< 32327, -32042> velocity=<-3,  3>
+position=< 43062, -53497> velocity=<-4,  5>
+position=< 32294, -10592> velocity=<-3,  1>
+position=< 10853,  53779> velocity=<-1, -5>
+position=< 32339,  10866> velocity=<-3, -1>
+position=<-53477, -21319> velocity=< 5,  2>
+position=<-42765,  53774> velocity=< 4, -5>
+position=<-53485,  32324> velocity=< 5, -3>
+position=<-53469,  21589> velocity=< 5, -2>
+position=<-32071, -32043> velocity=< 3,  3>
+position=< 10881, -42764> velocity=<-1,  4>
+position=<-21344,  10866> velocity=< 2, -1>
+position=<-10564,  32316> velocity=< 1, -3>
+position=< 32307,  10866> velocity=<-3, -1>
+position=< 43039, -21318> velocity=<-4,  2>
+position=< 32303, -32038> velocity=<-3,  3>
+position=<-21320,  21594> velocity=< 2, -2>
+position=<-10574, -42764> velocity=< 1,  4>
+position=<-21332,  43045> velocity=< 2, -4>
+position=<-21344, -10587> velocity=< 2,  1>
+position=< 43030, -42767> velocity=<-4,  4>
+position=<-53484, -21319> velocity=< 5,  2>
+position=< 43058,  53777> velocity=<-4, -5>
+position=<-21341,  32321> velocity=< 2, -3>
+position=<-10583, -21319> velocity=< 1,  2>
+position=<-32054, -10591> velocity=< 3,  1>
+position=<-53491, -53496> velocity=< 5,  5>
+position=<-42742,  43050> velocity=< 4, -4>
+position=<-32026, -10583> velocity=< 3,  1>
+position=< 10853,  21594> velocity=<-1, -2>
+position=<-53483,  32321> velocity=< 5, -3>
+position=<-21284, -21310> velocity=< 2,  2>
+position=< 32323,  43051> velocity=<-3, -4>
+position=< 32352,  53779> velocity=<-3, -5>
+position=< 21612,  21594> velocity=<-2, -2>
+position=< 32316,  43048> velocity=<-3, -4>
+"""
+
+func day10Part1() {
+    do {
+        var points = try Point.pointArray(from: day10Part1Input)
+        for _ in 0...4 {
+            print(try Point.grid(from: points, pointCharacter: "●", blankCharacter: " "))
+            points = Point.nextGeneration(from: points)
+        }
+    } catch {
+        print(error)
+    }
+}
+
+//day10Part1() Even in main.swift this takes too long to run
+
+let day10DebugPoints = """
+position=<43767,17590> velocity=<-5,-2>
+position=<43751,43766> velocity=<-5,-5>
+position=<-26060,43769> velocity=<3,-5>
+position=<-17283,35035> velocity=<2,-4>
+position=<8846,-34765> velocity=<-1,4>
+position=<-8594,43760> velocity=<1,-5>
+position=<-34790,43762> velocity=<4,-5>
+position=<-17304,-26031> velocity=<2,3>
+position=<-17328,8861> velocity=<2,-1>
+position=<-8594,-17309> velocity=<1,2>
+position=<-34742,-43488> velocity=<4,5>
+position=<-8567,-17311> velocity=<1,2>
+position=<-17330,43769> velocity=<2,-5>
+position=<35047,-8584> velocity=<-4,1>
+position=<17584,-17309> velocity=<-2,2>
+position=<43785,26310> velocity=<-5,-3>
+position=<35053,-17315> velocity=<-4,2>
+position=<-8588,-17313> velocity=<1,2>
+position=<-17340,-26036> velocity=<2,3>
+position=<-43481,-34761> velocity=<5,4>
+position=<43791,17591> velocity=<-5,-2>
+position=<35047,-34763> velocity=<-4,4>
+position=<-26021,-17315> velocity=<3,2>
+position=<35060,17594> velocity=<-4,-2>
+position=<26301,-43489> velocity=<-3,5>
+position=<43777,-43481> velocity=<-5,5>
+position=<-17284,43768> velocity=<2,-5>
+position=<-34779,8860> velocity=<4,-1>
+position=<-43512,26319> velocity=<5,-3>
+position=<-43503,17591> velocity=<5,-2>
+position=<-34733,-26036> velocity=<4,3>
+position=<35014,-43485> velocity=<-4,5>
+position=<35068,17589> velocity=<-4,-2>
+position=<43747,-8587> velocity=<-5,1>
+position=<-26029,35039> velocity=<3,-4>
+position=<26322,-34760> velocity=<-3,4>
+position=<17604,-43490> velocity=<-2,5>
+position=<43780,-17314> velocity=<-5,2>
+position=<-8559,-26032> velocity=<1,3>
+position=<-26062,-34760> velocity=<3,4>
+position=<8859,-8585> velocity=<-1,1>
+position=<35060,43769> velocity=<-4,-5>
+position=<17564,-8590> velocity=<-2,1>
+position=<-34758,-8582> velocity=<4,1>
+position=<-43459,-8583> velocity=<5,1>
+position=<17560,26316> velocity=<-2,-3>
+position=<-34754,-26031> velocity=<4,3>
+position=<17572,-8585> velocity=<-2,1>
+position=<-8565,43764> velocity=<1,-5>
+position=<-17279,17585> velocity=<2,-2>
+position=<-26016,-26036> velocity=<3,3>
+position=<-17305,8869> velocity=<2,-1>
+position=<43768,43764> velocity=<-5,-5>
+position=<-43483,-17313> velocity=<5,2>
+position=<35015,-34758> velocity=<-4,4>
+position=<35022,-34760> velocity=<-4,4>
+position=<8851,17593> velocity=<-1,-2>
+position=<17580,43768> velocity=<-2,-5>
+position=<-43482,43760> velocity=<5,-5>
+position=<-17305,-8590> velocity=<2,1>
+position=<-8571,-43487> velocity=<1,5>
+position=<-43503,-8590> velocity=<5,1>
+position=<-34742,-34760> velocity=<4,4>
+position=<17585,26315> velocity=<-2,-3>
+position=<35034,17590> velocity=<-4,-2>
+position=<26302,-8588> velocity=<-3,1>
+position=<-26049,-17311> velocity=<3,2>
+position=<-17314,-34759> velocity=<2,4>
+position=<-43491,8862> velocity=<5,-1>
+position=<-43464,-43486> velocity=<5,5>
+position=<-43503,-17314> velocity=<5,2>
+position=<-8615,-17314> velocity=<1,2>
+position=<8867,-34762> velocity=<-1,4>
+position=<35026,-17314> velocity=<-4,2>
+position=<43775,17593> velocity=<-5,-2>
+position=<-26064,-43481> velocity=<3,5>
+position=<-34763,-26033> velocity=<4,3>
+position=<-34778,-26039> velocity=<4,3>
+position=<-8595,43767> velocity=<1,-5>
+position=<-26017,-26036> velocity=<3,3>
+position=<43777,-8590> velocity=<-5,1>
+position=<-17314,43766> velocity=<2,-5>
+position=<-8583,-43489> velocity=<1,5>
+position=<26309,26317> velocity=<-3,-3>
+position=<43784,-43486> velocity=<-5,5>
+position=<8862,-34758> velocity=<-1,4>
+position=<-26049,-34762> velocity=<3,4>
+position=<-43457,43760> velocity=<5,-5>
+position=<26289,43760> velocity=<-3,-5>
+position=<26285,-26032> velocity=<-3,3>
+position=<-26047,17589> velocity=<3,-2>
+position=<8886,35039> velocity=<-1,-4>
+position=<43767,43766> velocity=<-5,-5>
+position=<35062,35044> velocity=<-4,-4>
+position=<-43499,43765> velocity=<5,-5>
+position=<35039,-17306> velocity=<-4,2>
+position=<8894,43764> velocity=<-1,-5>
+position=<8859,26314> velocity=<-1,-3>
+position=<17597,35042> velocity=<-2,-4>
+position=<43739,-17310> velocity=<-5,2>
+position=<-8564,35035> velocity=<1,-4>
+position=<43737,-26031> velocity=<-5,3>
+position=<17589,-34765> velocity=<-2,4>
+position=<-34774,17594> velocity=<4,-2>
+position=<-17295,-8590> velocity=<2,1>
+position=<-34758,-8590> velocity=<4,1>
+position=<35014,-17307> velocity=<-4,2>
+position=<43791,-17310> velocity=<-5,2>
+position=<-34734,43769> velocity=<4,-5>
+position=<35034,8860> velocity=<-4,-1>
+position=<-26060,26316> velocity=<3,-3>
+position=<43736,8869> velocity=<-5,-1>
+position=<35030,35042> velocity=<-4,-4>
+position=<26343,-8586> velocity=<-3,1>
+position=<8856,43768> velocity=<-1,-5>
+position=<26298,-34765> velocity=<-3,4>
+position=<35034,-43489> velocity=<-4,5>
+position=<35027,8862> velocity=<-4,-1>
+position=<-26015,17589> velocity=<3,-2>
+position=<-43491,-43484> velocity=<5,5>
+position=<35066,26319> velocity=<-4,-3>
+position=<17616,-43489> velocity=<-2,5>
+position=<-17316,26316> velocity=<2,-3>
+position=<35042,43769> velocity=<-4,-5>
+position=<-8599,-26039> velocity=<1,3>
+position=<17604,-17306> velocity=<-2,2>
+position=<-34786,-8590> velocity=<4,1>
+position=<43740,8861> velocity=<-5,-1>
+position=<-17337,-43490> velocity=<2,5>
+position=<26342,8869> velocity=<-3,-1>
+position=<26301,-17312> velocity=<-3,2>
+position=<-26013,-26036> velocity=<3,3>
+position=<43764,-26040> velocity=<-5,3>
+position=<-17282,-34756> velocity=<2,4>
+position=<-8613,17594> velocity=<1,-2>
+position=<17600,26310> velocity=<-2,-3>
+position=<26306,-43481> velocity=<-3,5>
+position=<-17335,-34756> velocity=<2,4>
+position=<-34758,35039> velocity=<4,-4>
+position=<8886,-26031> velocity=<-1,3>
+position=<43744,17594> velocity=<-5,-2>
+position=<17572,26314> velocity=<-2,-3>
+position=<17576,-17313> velocity=<-2,2>
+position=<43740,-26035> velocity=<-5,3>
+position=<-17319,-43485> velocity=<2,5>
+position=<35058,17588> velocity=<-4,-2>
+position=<8838,-26040> velocity=<-1,3>
+position=<26337,43764> velocity=<-3,-5>
+position=<-8562,43769> velocity=<1,-5>
+position=<17586,-26037> velocity=<-2,3>
+position=<17608,35038> velocity=<-2,-4>
+position=<17572,-17308> velocity=<-2,2>
+position=<43767,-26038> velocity=<-5,3>
+position=<-43483,8861> velocity=<5,-1>
+position=<26326,8869> velocity=<-3,-1>
+position=<8878,43764> velocity=<-1,-5>
+position=<-43472,26314> velocity=<5,-3>
+position=<8887,8860> velocity=<-1,-1>
+position=<-8556,-26031> velocity=<1,3>
+position=<-17300,8868> velocity=<2,-1>
+position=<-26028,17586> velocity=<3,-2>
+position=<-26033,-34762> velocity=<3,4>
+position=<43760,43765> velocity=<-5,-5>
+position=<26326,17591> velocity=<-3,-2>
+position=<26343,43760> velocity=<-3,-5>
+position=<8884,-43486> velocity=<-1,5>
+position=<-26064,17585> velocity=<3,-2>
+position=<17602,8869> velocity=<-2,-1>
+position=<-34742,-43482> velocity=<4,5>
+position=<43762,8867> velocity=<-5,-1>
+position=<-34745,35037> velocity=<4,-4>
+position=<-17312,-43489> velocity=<2,5>
+position=<-26060,-43482> velocity=<3,5>
+position=<-43499,26313> velocity=<5,-3>
+position=<-34766,-34756> velocity=<4,4>
+position=<26312,-34763> velocity=<-3,4>
+position=<-17298,43765> velocity=<2,-5>
+position=<26343,-34756> velocity=<-3,4>
+position=<8891,-26033> velocity=<-1,3>
+position=<35014,17593> velocity=<-4,-2>
+position=<35054,-8581> velocity=<-4,1>
+position=<-26060,8868> velocity=<3,-1>
+position=<8846,-34756> velocity=<-1,4>
+position=<26319,8864> velocity=<-3,-1>
+position=<-43504,43769> velocity=<5,-5>
+position=<-17313,17587> velocity=<2,-2>
+position=<-43466,-26031> velocity=<5,3>
+position=<-8615,35038> velocity=<1,-4>
+position=<-34787,43769> velocity=<4,-5>
+position=<43748,-8590> velocity=<-5,1>
+position=<-8613,-43490> velocity=<1,5>
+position=<17616,8865> velocity=<-2,-1>
+position=<8872,-34763> velocity=<-1,4>
+position=<26309,43768> velocity=<-3,-5>
+position=<-43480,-26036> velocity=<5,3>
+position=<17592,8867> velocity=<-2,-1>
+position=<-26021,-8587> velocity=<3,1>
+position=<43772,43768> velocity=<-5,-5>
+position=<-43459,8860> velocity=<5,-1>
+position=<-26062,35044> velocity=<3,-4>
+position=<26333,-43490> velocity=<-3,5>
+position=<17620,-34756> velocity=<-2,4>
+position=<35031,43761> velocity=<-4,-5>
+position=<26301,-26040> velocity=<-3,3>
+position=<-43459,8862> velocity=<5,-1>
+position=<26317,-43481> velocity=<-3,5>
+position=<26318,-8590> velocity=<-3,1>
+position=<17580,17592> velocity=<-2,-2>
+position=<-34733,26314> velocity=<4,-3>
+position=<-26060,26311> velocity=<3,-3>
+position=<8847,26317> velocity=<-1,-3>
+position=<43768,-17306> velocity=<-5,2>
+position=<-8567,8866> velocity=<1,-1>
+position=<17603,-34756> velocity=<-2,4>
+position=<26319,-43490> velocity=<-3,5>
+position=<-34734,-34762> velocity=<4,4>
+position=<17610,17594> velocity=<-2,-2>
+position=<17592,43761> velocity=<-2,-5>
+position=<8847,-8590> velocity=<-1,1>
+position=<-26033,43765> velocity=<3,-5>
+position=<35039,-17315> velocity=<-4,2>
+position=<-8581,43769> velocity=<1,-5>
+position=<-17328,35038> velocity=<2,-4>
+position=<17562,35044> velocity=<-2,-4>
+position=<43775,-17306> velocity=<-5,2>
+position=<26297,-17315> velocity=<-3,2>
+position=<35062,-17306> velocity=<-4,2>
+position=<35054,17585> velocity=<-4,-2>
+position=<-43459,-34765> velocity=<5,4>
+position=<35062,35044> velocity=<-4,-4>
+position=<-34786,35040> velocity=<4,-4>
+position=<-8580,26310> velocity=<1,-3>
+position=<17581,26314> velocity=<-2,-3>
+position=<17581,-8589> velocity=<-2,1>
+position=<26306,26316> velocity=<-3,-3>
+position=<35028,-43487> velocity=<-4,5>
+position=<-34762,35036> velocity=<4,-4>
+position=<-8567,-34764> velocity=<1,4>
+position=<17617,-43490> velocity=<-2,5>
+position=<43767,26316> velocity=<-5,-3>
+position=<-8589,35041> velocity=<1,-4>
+position=<35029,-34760> velocity=<-4,4>
+position=<-43495,-43482> velocity=<5,5>
+position=<26290,-43485> velocity=<-3,5>
+position=<17581,-43483> velocity=<-2,5>
+position=<17596,-34761> velocity=<-2,4>
+position=<43787,-43486> velocity=<-5,5>
+position=<8883,8863> velocity=<-1,-1>
+position=<-34758,-17310> velocity=<4,2>
+position=<26298,43760> velocity=<-3,-5>
+position=<17560,-43487> velocity=<-2,5>
+position=<17617,26319> velocity=<-2,-3>
+position=<8836,43760> velocity=<-1,-5>
+position=<17594,35044> velocity=<-2,-4>
+position=<43775,-26031> velocity=<-5,3>
+position=<43796,8869> velocity=<-5,-1>
+position=<-17281,-17311> velocity=<2,2>
+position=<-34753,8868> velocity=<4,-1>
+position=<-34740,-34765> velocity=<4,4>
+position=<17596,-26040> velocity=<-2,3>
+position=<-26057,17592> velocity=<3,-2>
+position=<-34774,-17313> velocity=<4,2>
+position=<26317,43769> velocity=<-3,-5>
+position=<-17324,8864> velocity=<2,-1>
+position=<35068,-43481> velocity=<-4,5>
+position=<-43467,-26034> velocity=<5,3>
+position=<-26049,-17308> velocity=<3,2>
+position=<43795,26310> velocity=<-5,-3>
+position=<-26032,17589> velocity=<3,-2>
+position=<-34753,-34762> velocity=<4,4>
+position=<-17299,43760> velocity=<2,-5>
+position=<43756,-34763> velocity=<-5,4>
+position=<-26060,-17314> velocity=<3,2>
+position=<-17316,-43487> velocity=<2,5>
+position=<35031,-43487> velocity=<-4,5>
+position=<-8614,-34756> velocity=<1,4>
+position=<-43467,-8583> velocity=<5,1>
+position=<-26006,26310> velocity=<3,-3>
+position=<-26041,-43490> velocity=<3,5>
+position=<-26017,26315> velocity=<3,-3>
+position=<-26053,-17307> velocity=<3,2>
+position=<17616,43763> velocity=<-2,-5>
+position=<-8587,43768> velocity=<1,-5>
+position=<8835,26317> velocity=<-1,-3>
+position=<-43495,-43482> velocity=<5,5>
+position=<-43515,8862> velocity=<5,-1>
+position=<-26041,26317> velocity=<3,-3>
+position=<17571,-43481> velocity=<-2,5>
+position=<-34730,43764> velocity=<4,-5>
+position=<-26009,-17311> velocity=<3,2>
+position=<26301,-34763> velocity=<-3,4>
+position=<35034,8860> velocity=<-4,-1>
+position=<-8578,-34759> velocity=<1,4>
+position=<8875,35042> velocity=<-1,-4>
+position=<-26046,-8584> velocity=<3,1>
+position=<8854,17590> velocity=<-1,-2>
+position=<-8570,8862> velocity=<1,-1>
+position=<8847,17587> velocity=<-1,-2>
+position=<-26039,-17312> velocity=<3,2>
+position=<-43467,35044> velocity=<5,-4>
+position=<35047,-43484> velocity=<-4,5>
+position=<8867,-43486> velocity=<-1,5>
+position=<8863,35043> velocity=<-1,-4>
+position=<8884,-8581> velocity=<-1,1>
+position=<17581,-8586> velocity=<-2,1>
+position=<-34750,-34758> velocity=<4,4>
+position=<17603,-43481> velocity=<-2,5>
+position=<-26006,43769> velocity=<3,-5>
+position=<43772,-34760> velocity=<-5,4>
+position=<8835,35036> velocity=<-1,-4>
+position=<-26060,-26032> velocity=<3,3>
+position=<-43473,8869> velocity=<5,-1>
+position=<-17295,43769> velocity=<2,-5>
+position=<43784,43760> velocity=<-5,-5>
+position=<26310,-17311> velocity=<-3,2>
+position=<26297,8865> velocity=<-3,-1>
+position=<35060,43764> velocity=<-4,-5>
+position=<26309,-43483> velocity=<-3,5>
+position=<43772,-43487> velocity=<-5,5>
+position=<26301,26317> velocity=<-3,-3>
+position=<-8615,-8588> velocity=<1,1>
+position=<-17331,8869> velocity=<2,-1>
+position=<-17332,-17307> velocity=<2,2>
+position=<35044,35035> velocity=<-4,-4>
+position=<26321,-26036> velocity=<-3,3>
+position=<35054,-43487> velocity=<-4,5>
+position=<26288,-8590> velocity=<-3,1>
+position=<8851,43769> velocity=<-1,-5>
+position=<26333,8864> velocity=<-3,-1>
+position=<-43467,-17315> velocity=<5,2>
+position=<-34757,43764> velocity=<4,-5>
+position=<-43475,26318> velocity=<5,-3>
+position=<-43459,17585> velocity=<5,-2>
+position=<-26065,-26037> velocity=<3,3>
+position=<8879,-34756> velocity=<-1,4>
+position=<-17340,8864> velocity=<2,-1>
+position=<-8562,26310> velocity=<1,-3>
+position=<26301,8864> velocity=<-3,-1>
+position=<35031,-17314> velocity=<-4,2>
+position=<26297,-26032> velocity=<-3,3>
+position=<-17316,17590> velocity=<2,-2>
+position=<-8572,-34756> velocity=<1,4>
+position=<-17328,35037> velocity=<2,-4>
+position=<-17340,-8585> velocity=<2,1>
+position=<35022,-34759> velocity=<-4,4>
+position=<-43474,-17315> velocity=<5,2>
+position=<35050,43767> velocity=<-4,-5>
+position=<-17337,26315> velocity=<2,-3>
+position=<-8581,-17315> velocity=<1,2>
+position=<-26048,-8589> velocity=<3,1>
+position=<-43481,-43486> velocity=<5,5>
+position=<-34734,35042> velocity=<4,-4>
+position=<-26020,-8581> velocity=<3,1>
+position=<8851,17590> velocity=<-1,-2>
+position=<-43473,26315> velocity=<5,-3>
+position=<-17280,-17306> velocity=<2,2>
+position=<26317,35043> velocity=<-3,-4>
+position=<26346,43769> velocity=<-3,-5>
+position=<17608,17590> velocity=<-2,-2>
+position=<26310,35040> velocity=<-3,-4>
+"""
+
+func day10Debug() {
+    do {
+        var points = try Point.pointArray(from: day10Part1Input)
+        //    points.forEach { print($0) }
+        //    print(points.count)                     // 360
+        //    print(try Point.gridSize(from: points)) // (-53525.0, -53500.0, 107331.0, 107279.0)
+        //    print(points.first?.asInputString)      // Demonstrates that the asInputString computed property works correctly, effectively allowing a point to be 'saved' and re-used again later.
+        
+        var oldSize = try Point.gridSize(from: points)
+        
+        for i in 0...20_000 {
+            points = Point.nextGeneration(from: points)
+            let newSize = try Point.gridSize(from: points)
+            if newSize.width > oldSize.width || newSize.height > oldSize.height {
+                print("Grid has grown. Therefore previous generation was a minimum")
+                print("New size: \(newSize)")
+                print("Area: \(newSize.width * newSize.height)")
+                print("i: \(i)") // 10727
+                points.forEach { print($0.asInputString) } // Allows task to be resumed later
+                return
+            }
+            oldSize = newSize
+        }
+        
+        print("Could not find expansion from minimum")
+        print("Latest size: \(oldSize)")
+        print("Area: \(oldSize.width * oldSize.height)")
+        points.forEach { print($0.asInputString) } // Allows task to be resumed later
+    } catch {
+        print(error)
+    }
+}
+
+//day10Debug()
+
 print("Took: \(Date().timeIntervalSince(before)) seconds")
