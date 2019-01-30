@@ -4410,7 +4410,7 @@ func day10Debug() {
                 print("Grid has grown. Therefore previous generation was a minimum")
                 print("New size: \(newSize)")
                 print("Area: \(newSize.width * newSize.height)")
-                print("i: \(i)") // 10727
+                print("i: \(i)") // 10727 Unknowingly, this is the answer to part 2 of day 10 (178.78 minutes) (2.98 hours) (probably less time than it took to program the solution...)
                 points.forEach { print($0.asInputString) } // Allows task to be resumed later
                 return
             }
@@ -4426,6 +4426,6 @@ func day10Debug() {
     }
 }
 
-//day10Debug()
+//day10Debug() // Took 3.6 seconds on work Mac Mini when starting from challenge string (not from 'saved' string)
 
 print("Took: \(Date().timeIntervalSince(before)) seconds")

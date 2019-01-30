@@ -130,6 +130,15 @@ struct Point {
             return Point(position: newPosition, velocity: point.velocity)
         }
     }
+    
+    public static func previousGeneration(from points: [Point]) -> [Point] {
+        return points.map { (point) -> Point in
+            let newXPosition = point.position.x - point.velocity.x
+            let newYPosition = point.position.y - point.velocity.y
+            let newPosition = CGPoint(x: newXPosition, y: newYPosition)
+            return Point(position: newPosition, velocity: point.velocity)
+        }
+    }
 }
 
 // This confirms that the Point is being created correctly from a single string input
@@ -626,3 +635,392 @@ do {
     print(error)
 }
 */
+
+let increasedInSize = """
+position=<137,138> velocity=<-5,-2>
+position=<121,136> velocity=<-5,-5>
+position=<118,139> velocity=<3,-5>
+position=<169,131> velocity=<2,-4>
+position=<120,139> velocity=<-1,4>
+position=<132,130> velocity=<1,-5>
+position=<114,132> velocity=<4,-5>
+position=<148,147> velocity=<2,3>
+position=<124,135> velocity=<2,-1>
+position=<132,143> velocity=<1,2>
+position=<162,142> velocity=<4,5>
+position=<159,141> velocity=<1,2>
+position=<122,139> velocity=<2,-5>
+position=<143,142> velocity=<-4,1>
+position=<132,143> velocity=<-2,2>
+position=<155,132> velocity=<-5,-3>
+position=<149,137> velocity=<-4,2>
+position=<138,139> velocity=<1,2>
+position=<112,142> velocity=<2,3>
+position=<149,143> velocity=<5,4>
+position=<161,139> velocity=<-5,-2>
+position=<143,141> velocity=<-4,4>
+position=<157,137> velocity=<3,2>
+position=<156,142> velocity=<-4,-2>
+position=<123,141> velocity=<-3,5>
+position=<147,149> velocity=<-5,5>
+position=<168,138> velocity=<2,-5>
+position=<125,134> velocity=<4,-1>
+position=<118,141> velocity=<5,-3>
+position=<127,139> velocity=<5,-2>
+position=<171,142> velocity=<4,3>
+position=<110,145> velocity=<-4,5>
+position=<164,137> velocity=<-4,-2>
+position=<117,139> velocity=<-5,1>
+position=<149,135> velocity=<3,-4>
+position=<144,144> velocity=<-3,4>
+position=<152,140> velocity=<-2,5>
+position=<150,138> velocity=<-5,2>
+position=<167,146> velocity=<1,3>
+position=<116,144> velocity=<3,4>
+position=<133,141> velocity=<-1,1>
+position=<156,139> velocity=<-4,-5>
+position=<112,136> velocity=<-2,1>
+position=<146,144> velocity=<4,1>
+position=<171,143> velocity=<5,1>
+position=<108,138> velocity=<-2,-3>
+position=<150,147> velocity=<4,3>
+position=<120,141> velocity=<-2,1>
+position=<161,134> velocity=<1,-5>
+position=<173,133> velocity=<2,-2>
+position=<162,142> velocity=<3,3>
+position=<147,143> velocity=<2,-1>
+position=<138,134> velocity=<-5,-5>
+position=<147,139> velocity=<5,2>
+position=<111,146> velocity=<-4,4>
+position=<118,144> velocity=<-4,4>
+position=<125,141> velocity=<-1,-2>
+position=<128,138> velocity=<-2,-5>
+position=<148,130> velocity=<5,-5>
+position=<147,136> velocity=<2,1>
+position=<155,143> velocity=<1,5>
+position=<127,136> velocity=<5,1>
+position=<162,144> velocity=<4,4>
+position=<133,137> velocity=<-2,-3>
+position=<130,138> velocity=<-4,-2>
+position=<124,138> velocity=<-3,1>
+position=<129,141> velocity=<3,2>
+position=<138,145> velocity=<2,4>
+position=<139,136> velocity=<5,-1>
+position=<166,144> velocity=<5,5>
+position=<127,138> velocity=<5,2>
+position=<111,138> velocity=<1,2>
+position=<141,142> velocity=<-1,4>
+position=<122,138> velocity=<-4,2>
+position=<145,141> velocity=<-5,-2>
+position=<114,149> velocity=<3,5>
+position=<141,145> velocity=<4,3>
+position=<126,139> velocity=<4,3>
+position=<131,137> velocity=<1,-5>
+position=<161,142> velocity=<3,3>
+position=<147,136> velocity=<-5,1>
+position=<138,136> velocity=<2,-5>
+position=<143,141> velocity=<1,5>
+position=<131,139> velocity=<-3,-3>
+position=<154,144> velocity=<-5,5>
+position=<136,146> velocity=<-1,4>
+position=<129,142> velocity=<3,4>
+position=<173,130> velocity=<5,-5>
+position=<111,130> velocity=<-3,-5>
+position=<107,146> velocity=<-3,3>
+position=<131,137> velocity=<3,-2>
+position=<160,135> velocity=<-1,-4>
+position=<137,136> velocity=<-5,-5>
+position=<158,140> velocity=<-4,-4>
+position=<131,135> velocity=<5,-5>
+position=<135,146> velocity=<-4,2>
+position=<168,134> velocity=<-1,-5>
+position=<133,136> velocity=<-1,-3>
+position=<145,138> velocity=<-2,-4>
+position=<109,142> velocity=<-5,2>
+position=<162,131> velocity=<1,-4>
+position=<107,147> velocity=<-5,3>
+position=<137,139> velocity=<-2,4>
+position=<130,142> velocity=<4,-2>
+position=<157,136> velocity=<2,1>
+position=<146,136> velocity=<4,1>
+position=<110,145> velocity=<-4,2>
+position=<161,142> velocity=<-5,2>
+position=<170,139> velocity=<4,-5>
+position=<130,134> velocity=<-4,-1>
+position=<118,138> velocity=<3,-3>
+position=<106,143> velocity=<-5,-1>
+position=<126,138> velocity=<-4,-4>
+position=<165,140> velocity=<-3,1>
+position=<130,138> velocity=<-1,-5>
+position=<120,139> velocity=<-3,4>
+position=<130,141> velocity=<-4,5>
+position=<123,136> velocity=<-4,-1>
+position=<163,137> velocity=<3,-2>
+position=<139,146> velocity=<5,5>
+position=<162,141> velocity=<-4,-3>
+position=<164,141> velocity=<-2,5>
+position=<136,138> velocity=<2,-3>
+position=<138,139> velocity=<-4,-5>
+position=<127,139> velocity=<1,3>
+position=<152,146> velocity=<-2,2>
+position=<118,136> velocity=<4,1>
+position=<110,135> velocity=<-5,-1>
+position=<115,140> velocity=<2,5>
+position=<164,143> velocity=<-3,-1>
+position=<123,140> velocity=<-3,2>
+position=<165,142> velocity=<3,3>
+position=<134,138> velocity=<-5,3>
+position=<170,148> velocity=<2,4>
+position=<113,142> velocity=<1,-2>
+position=<148,132> velocity=<-2,-3>
+position=<128,149> velocity=<-3,5>
+position=<117,148> velocity=<2,4>
+position=<146,135> velocity=<4,-4>
+position=<160,147> velocity=<-1,3>
+position=<114,142> velocity=<-5,-2>
+position=<120,136> velocity=<-2,-3>
+position=<124,139> velocity=<-2,2>
+position=<110,143> velocity=<-5,3>
+position=<133,145> velocity=<2,5>
+position=<154,136> velocity=<-4,-2>
+position=<112,138> velocity=<-1,3>
+position=<159,134> velocity=<-3,-5>
+position=<164,139> velocity=<1,-5>
+position=<134,141> velocity=<-2,3>
+position=<156,134> velocity=<-2,-4>
+position=<120,144> velocity=<-2,2>
+position=<137,140> velocity=<-5,3>
+position=<147,135> velocity=<5,-1>
+position=<148,143> velocity=<-3,-1>
+position=<152,134> velocity=<-1,-5>
+position=<158,136> velocity=<5,-3>
+position=<161,134> velocity=<-1,-1>
+position=<170,147> velocity=<1,3>
+position=<152,142> velocity=<2,-1>
+position=<150,134> velocity=<3,-2>
+position=<145,142> velocity=<3,4>
+position=<130,135> velocity=<-5,-5>
+position=<148,139> velocity=<-3,-2>
+position=<165,130> velocity=<-3,-5>
+position=<158,144> velocity=<-1,5>
+position=<114,133> velocity=<3,-2>
+position=<150,143> velocity=<-2,-1>
+position=<162,148> velocity=<4,5>
+position=<132,141> velocity=<-5,-1>
+position=<159,133> velocity=<4,-4>
+position=<140,141> velocity=<2,5>
+position=<118,148> velocity=<3,5>
+position=<131,135> velocity=<5,-3>
+position=<138,148> velocity=<4,4>
+position=<134,141> velocity=<-3,4>
+position=<154,135> velocity=<2,-5>
+position=<165,148> velocity=<-3,4>
+position=<165,145> velocity=<-1,3>
+position=<110,141> velocity=<-4,-2>
+position=<150,145> velocity=<-4,1>
+position=<118,142> velocity=<3,-1>
+position=<120,148> velocity=<-1,4>
+position=<141,138> velocity=<-3,-1>
+position=<126,139> velocity=<5,-5>
+position=<139,135> velocity=<2,-2>
+position=<164,147> velocity=<5,3>
+position=<111,134> velocity=<1,-4>
+position=<117,139> velocity=<4,-5>
+position=<118,136> velocity=<-5,1>
+position=<113,140> velocity=<1,5>
+position=<164,139> velocity=<-2,-1>
+position=<146,141> velocity=<-1,4>
+position=<131,138> velocity=<-3,-5>
+position=<150,142> velocity=<5,3>
+position=<140,141> velocity=<-2,-1>
+position=<157,139> velocity=<3,1>
+position=<142,138> velocity=<-5,-5>
+position=<171,134> velocity=<5,-1>
+position=<116,140> velocity=<3,-4>
+position=<155,140> velocity=<-3,5>
+position=<168,148> velocity=<-2,4>
+position=<127,131> velocity=<-4,-5>
+position=<123,138> velocity=<-3,3>
+position=<171,136> velocity=<5,-1>
+position=<139,149> velocity=<-3,5>
+position=<140,136> velocity=<-3,1>
+position=<128,140> velocity=<-2,-2>
+position=<171,136> velocity=<4,-3>
+position=<118,133> velocity=<3,-3>
+position=<121,139> velocity=<-1,-3>
+position=<138,146> velocity=<-5,2>
+position=<159,140> velocity=<1,-1>
+position=<151,148> velocity=<-2,4>
+position=<141,140> velocity=<-3,5>
+position=<170,142> velocity=<4,4>
+position=<158,142> velocity=<-2,-2>
+position=<140,131> velocity=<-2,-5>
+position=<121,136> velocity=<-1,1>
+position=<145,135> velocity=<3,-5>
+position=<135,137> velocity=<-4,2>
+position=<145,139> velocity=<1,-5>
+position=<124,134> velocity=<2,-4>
+position=<110,140> velocity=<-2,-4>
+position=<145,146> velocity=<-5,2>
+position=<119,137> velocity=<-3,2>
+position=<158,146> velocity=<-4,2>
+position=<150,133> velocity=<-4,-2>
+position=<171,139> velocity=<5,4>
+position=<158,140> velocity=<-4,-4>
+position=<118,136> velocity=<4,-4>
+position=<146,132> velocity=<1,-3>
+position=<129,136> velocity=<-2,-3>
+position=<129,137> velocity=<-2,1>
+position=<128,138> velocity=<-3,-3>
+position=<124,143> velocity=<-4,5>
+position=<142,132> velocity=<4,-4>
+position=<159,140> velocity=<1,4>
+position=<165,140> velocity=<-2,5>
+position=<137,138> velocity=<-5,-3>
+position=<137,137> velocity=<1,-4>
+position=<125,144> velocity=<-4,4>
+position=<135,148> velocity=<5,5>
+position=<112,145> velocity=<-3,5>
+position=<129,147> velocity=<-2,5>
+position=<144,143> velocity=<-2,4>
+position=<157,144> velocity=<-5,5>
+position=<157,137> velocity=<-1,-1>
+position=<146,142> velocity=<4,2>
+position=<120,130> velocity=<-3,-5>
+position=<108,143> velocity=<-2,5>
+position=<165,141> velocity=<-2,-3>
+position=<110,130> velocity=<-1,-5>
+position=<142,140> velocity=<-2,-4>
+position=<145,147> velocity=<-5,3>
+position=<166,143> velocity=<-5,-1>
+position=<171,141> velocity=<2,2>
+position=<151,142> velocity=<4,-1>
+position=<164,139> velocity=<4,4>
+position=<144,138> velocity=<-2,3>
+position=<121,140> velocity=<3,-2>
+position=<130,139> velocity=<4,2>
+position=<139,139> velocity=<-3,-5>
+position=<128,138> velocity=<2,-1>
+position=<164,149> velocity=<-4,5>
+position=<163,144> velocity=<5,3>
+position=<129,144> velocity=<3,2>
+position=<165,132> velocity=<-5,-3>
+position=<146,137> velocity=<3,-2>
+position=<151,142> velocity=<4,4>
+position=<153,130> velocity=<2,-5>
+position=<126,141> velocity=<-5,4>
+position=<118,138> velocity=<3,2>
+position=<136,143> velocity=<2,5>
+position=<127,143> velocity=<-4,5>
+position=<112,148> velocity=<1,4>
+position=<163,143> velocity=<5,1>
+position=<172,132> velocity=<3,-3>
+position=<137,140> velocity=<3,5>
+position=<161,137> velocity=<3,-3>
+position=<125,145> velocity=<3,2>
+position=<164,133> velocity=<-2,-5>
+position=<139,138> velocity=<1,-5>
+position=<109,139> velocity=<-1,-3>
+position=<135,148> velocity=<5,5>
+position=<115,136> velocity=<5,-1>
+position=<137,139> velocity=<3,-3>
+position=<119,149> velocity=<-2,5>
+position=<174,134> velocity=<4,-5>
+position=<169,141> velocity=<3,2>
+position=<123,141> velocity=<-3,4>
+position=<130,134> velocity=<-4,-1>
+position=<148,145> velocity=<1,4>
+position=<149,138> velocity=<-1,-4>
+position=<132,142> velocity=<3,1>
+position=<128,138> velocity=<-1,-2>
+position=<156,136> velocity=<1,-1>
+position=<121,135> velocity=<-1,-2>
+position=<139,140> velocity=<3,2>
+position=<163,140> velocity=<5,-4>
+position=<143,146> velocity=<-4,5>
+position=<141,144> velocity=<-1,5>
+position=<137,139> velocity=<-1,-4>
+position=<158,145> velocity=<-1,1>
+position=<129,140> velocity=<-2,1>
+position=<154,146> velocity=<4,4>
+position=<151,149> velocity=<-2,5>
+position=<172,139> velocity=<3,-5>
+position=<142,144> velocity=<-5,4>
+position=<109,132> velocity=<-1,-4>
+position=<118,146> velocity=<3,3>
+position=<157,143> velocity=<5,-1>
+position=<157,139> velocity=<2,-5>
+position=<154,130> velocity=<-5,-5>
+position=<132,141> velocity=<-3,2>
+position=<119,139> velocity=<-3,-1>
+position=<156,134> velocity=<-4,-5>
+position=<131,147> velocity=<-3,5>
+position=<142,143> velocity=<-5,5>
+position=<123,139> velocity=<-3,-3>
+position=<111,138> velocity=<1,1>
+position=<121,143> velocity=<2,-1>
+position=<120,145> velocity=<2,2>
+position=<140,131> velocity=<-4,-4>
+position=<143,142> velocity=<-3,3>
+position=<150,143> velocity=<-4,5>
+position=<110,136> velocity=<-3,1>
+position=<125,139> velocity=<-1,-5>
+position=<155,138> velocity=<-3,-1>
+position=<163,137> velocity=<5,2>
+position=<147,134> velocity=<4,-5>
+position=<155,140> velocity=<5,-3>
+position=<171,133> velocity=<5,-2>
+position=<113,141> velocity=<3,3>
+position=<153,148> velocity=<-1,4>
+position=<112,138> velocity=<2,-1>
+position=<164,132> velocity=<1,-3>
+position=<123,138> velocity=<-3,-1>
+position=<127,138> velocity=<-4,2>
+position=<119,146> velocity=<-3,3>
+position=<136,138> velocity=<2,-2>
+position=<154,148> velocity=<1,4>
+position=<124,133> velocity=<2,-4>
+position=<112,141> velocity=<2,1>
+position=<118,145> velocity=<-4,4>
+position=<156,137> velocity=<5,2>
+position=<146,137> velocity=<-4,-5>
+position=<115,137> velocity=<2,-3>
+position=<145,137> velocity=<1,2>
+position=<130,137> velocity=<3,1>
+position=<149,144> velocity=<5,5>
+position=<170,138> velocity=<4,-4>
+position=<158,145> velocity=<3,1>
+position=<125,138> velocity=<-1,-2>
+position=<157,137> velocity=<5,-3>
+position=<172,146> velocity=<2,2>
+position=<139,139> velocity=<-3,-4>
+position=<168,139> velocity=<-3,-5>
+position=<156,138> velocity=<-2,-2>
+position=<132,136> velocity=<-3,-4>
+"""
+
+/*
+do {
+    var points = try Point.pointArray(from: increasedInSize)
+    let previousPoints = Point.previousGeneration(from: points)
+    print(try Point.grid(from: previousPoints, pointCharacter: "●", blankCharacter: " "))
+    /*
+      ●●●●      ●●●  ●    ●  ●    ●  ●●●●●   ●●●●●●  ●●●●●●  ●●●●●●
+     ●    ●      ●   ●●   ●  ●   ●   ●    ●       ●  ●       ●
+     ●           ●   ●●   ●  ●  ●    ●    ●       ●  ●       ●
+     ●           ●   ● ●  ●  ● ●     ●    ●      ●   ●       ●
+     ●           ●   ● ●  ●  ●●      ●●●●●      ●    ●●●●●   ●●●●●
+     ●  ●●●      ●   ●  ● ●  ●●      ●    ●    ●     ●       ●
+     ●    ●      ●   ●  ● ●  ● ●     ●    ●   ●      ●       ●
+     ●    ●  ●   ●   ●   ●●  ●  ●    ●    ●  ●       ●       ●
+     ●   ●●  ●   ●   ●   ●●  ●   ●   ●    ●  ●       ●       ●
+      ●●● ●   ●●●    ●    ●  ●    ●  ●●●●●   ●●●●●●  ●●●●●●  ●●●●●●
+    */
+    
+    // (GJNKBZEE) Correct!
+} catch {
+    print(error)
+}
+*/
+
+// Unknowingly, I printed the answer to part 2 to in main.swift: 10727 (178.78 minutes) (2.98 hours) (probably less time than it took to program the solution...)
