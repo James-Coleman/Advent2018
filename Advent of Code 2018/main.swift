@@ -4428,4 +4428,115 @@ func day10Debug() {
 
 //day10Debug() // Took 3.68 seconds on work Mac Mini when starting from challenge string (not from 'saved' string)
 
+extension Int {
+    var hundredsDigit: Int {
+        if -99...99 ~= self {
+            return 0
+        } else {
+            let string = String(self)
+            let hundredsOnly = string.suffix(3)
+            let hundredsDigit = hundredsOnly.first!
+            return Int(String(hundredsDigit))!
+        }
+    }
+}
+
+struct FuelCell {
+    let position: CGPoint
+    let serialNumber: Int
+    
+    private var rackID: Int {
+        return Int(position.x + 10)
+    }
+    
+    public var powerLevel: Int {
+        var level = rackID
+        level *= Int(position.y)
+        level += serialNumber
+        level *= rackID
+        let hundredsDigit = level.hundredsDigit
+        return hundredsDigit - 5
+    }
+    
+    enum FuelCellError: Swift.Error {
+        case arrayTooShort(arrayLength: Int, expected: Int)
+    }
+    
+    public static func grid(serialNumber: Int) -> [[FuelCell]] {
+        return (1...300).map { y -> [FuelCell] in
+            return (1...300).map { x -> FuelCell in
+                return FuelCell(position: CGPoint(x: x, y: y), serialNumber: serialNumber)
+            }
+        }
+    }
+    
+    public static func grid3x3(xCorner: Int, yCorner: Int, serialNumber: Int) -> [[FuelCell]] {
+        return (yCorner..<yCorner + 3).map { y -> [FuelCell] in
+            return (xCorner..<xCorner + 3).map { x -> FuelCell in
+                return FuelCell(position: CGPoint(x: x, y: y), serialNumber: serialNumber)
+            }
+        }
+    }
+    
+    public static func fuelCellAt(x: Int, y: Int, in array: [[FuelCell]]) throws -> FuelCell {
+        guard array.count >= y else { throw FuelCellError.arrayTooShort(arrayLength: array.count, expected: y) }
+        let subArray = array[y - 1]
+        guard subArray.count >= x else { throw FuelCellError.arrayTooShort(arrayLength: subArray.count, expected: x) }
+        return subArray[x - 1]
+    }
+    
+    public static func grid3x3(x: Int, y: Int, source: [[FuelCell]]) throws -> [[FuelCell]] {
+        guard (source.count - 2) >= y else { throw FuelCellError.arrayTooShort(arrayLength: source.count, expected: y) }
+        
+        let subArray1 = source[y - 1]
+        let subArray2 = source[y]
+        let subArray3 = source[y + 1]
+        
+        guard (subArray1.count - 2) >= x else { throw FuelCellError.arrayTooShort(arrayLength: subArray1.count, expected: x) }
+        guard (subArray2.count - 2) >= x else { throw FuelCellError.arrayTooShort(arrayLength: subArray2.count, expected: x) }
+        guard (subArray3.count - 2) >= x else { throw FuelCellError.arrayTooShort(arrayLength: subArray3.count, expected: x) }
+        
+        return [
+            [subArray1[x - 1], subArray1[x], subArray1[x + 1]],
+            [subArray2[x - 1], subArray2[x], subArray2[x + 1]],
+            [subArray3[x - 1], subArray3[x], subArray3[x + 1]]
+        ]
+    }
+}
+
+struct FuelCellSquare {
+    let fuelCells: [[FuelCell]]
+    
+    var totalPower: Int {
+        let combinedArray = fuelCells.reduce([], +)
+        let power = combinedArray.map { $0.powerLevel }
+        return power.reduce(0, +)
+    }
+}
+
+func day11Part1() {
+    do {
+        var highestTotalSquare: FuelCellSquare? = nil
+        
+        let challengeGrid = FuelCell.grid(serialNumber: 4842)
+        
+        for y in 1...298 {
+            for x in 1...298 {
+                let newGrid = try FuelCell.grid3x3(x: x, y: y, source: challengeGrid)
+                let newSquare = FuelCellSquare(fuelCells: newGrid)
+                let currentHighestTotal = highestTotalSquare?.totalPower ?? 0
+                if newSquare.totalPower > currentHighestTotal {
+                    highestTotalSquare = newSquare
+                }
+            }
+        }
+        
+        print(highestTotalSquare) // The top left fuel cell is at 20,83 (correct!)
+    } catch {
+        print(error)
+    }
+}
+
+//day11Part1()
+
 print("Took: \(Date().timeIntervalSince(before)) seconds")
