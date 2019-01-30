@@ -4426,6 +4426,6 @@ func day10Debug() {
     }
 }
 
-//day10Debug() // Took 3.6 seconds on work Mac Mini when starting from challenge string (not from 'saved' string)
+//day10Debug() // Took 3.68 seconds on work Mac Mini when starting from challenge string (not from 'saved' string)
 
 print("Took: \(Date().timeIntervalSince(before)) seconds")
