@@ -59,6 +59,8 @@ struct FuelCell {
     }
     
     public static func grid3x3(x: Int, y: Int, source: [[FuelCell]]) throws -> [[FuelCell]] {
+        // Calculate the required count offset
+//        let countOffset = 
         guard (source.count - 2) >= y else { throw FuelCellError.arrayTooShort(arrayLength: source.count, expected: y) }
         
         let subArray1 = source[y - 1]
@@ -70,6 +72,7 @@ struct FuelCell {
         guard (subArray3.count - 2) >= x else { throw FuelCellError.arrayTooShort(arrayLength: subArray3.count, expected: x) }
         
         return [
+            // Replace these with slices
             [subArray1[x - 1], subArray1[x], subArray1[x + 1]],
             [subArray2[x - 1], subArray2[x], subArray2[x + 1]],
             [subArray3[x - 1], subArray3[x], subArray3[x + 1]]
@@ -94,7 +97,6 @@ FuelCell(position: CGPoint(x: 217, y: 196), serialNumber: 39).powerLevel    //  
 FuelCell(position: CGPoint(x: 101, y: 153), serialNumber: 71).powerLevel    //  4 (correct)
 */
 
-/*
 do {
     let exampleGrid = FuelCell.grid(serialNumber: 18)
     let exampleSquare = try FuelCell.grid3x3(x: 33, y: 45, source: exampleGrid)
@@ -107,14 +109,13 @@ do {
     let fuelCellSquare = FuelCellSquare(fuelCells: exampleSquare)
     fuelCellSquare.totalPower // 29 (correct)
     
-    let exampleGrid2 = FuelCell.grid(serialNumber: 42)
-    let exampleSquare2 = try FuelCell.grid3x3(x: 21, y: 61, source: exampleGrid2)
-    let fuelCellSquare2 = FuelCellSquare(fuelCells: exampleSquare2)
-    fuelCellSquare2.totalPower // 30 (correct)
+//    let exampleGrid2 = FuelCell.grid(serialNumber: 42)
+//    let exampleSquare2 = try FuelCell.grid3x3(x: 21, y: 61, source: exampleGrid2)
+//    let fuelCellSquare2 = FuelCellSquare(fuelCells: exampleSquare2)
+//    fuelCellSquare2.totalPower // 30 (correct)
 } catch {
     print(error)
 }
-*/
 
 //let exampleArray = [exampleGrid[33][45].powerLevel, exampleGrid[45][33].powerLevel, exampleGrid[45 - 1][33 - 1].powerLevel, exampleGrid[45 - 2][33 - 2].powerLevel]
 
@@ -135,6 +136,8 @@ do {
 }
 */
 
+// This takes too long to run in the playground but works in 5 seconds in main.swift
+/*
 do {
     var highestTotalSquare: FuelCellSquare? = nil
     
@@ -151,9 +154,10 @@ do {
         }
     }
     
-    print(highestTotalSquare)
+ print(highestTotalSquare) // Part 1 answer: 20,83
 } catch {
     print(error)
 }
+*/
 
 
